@@ -85,19 +85,41 @@ export function parseAuxsolTimestamp(value: unknown): Date | undefined {
   return undefined;
 }
 
+function hasRealtimeBusinessFields(value: Record<string, unknown>) {
+  return value.energyData !== undefined || typeof value.sn === 'string' || value.dt !== undefined;
+}
+
 export function isAuxsolOfficialRealtimePayload(payload: unknown): boolean {
   if (!payload || typeof payload !== 'object') return false;
   const root = payload as Record<string, unknown>;
   if (root.notOfficialContract === true) return false;
   if (root.device !== undefined) return false;
-  if (root.data && typeof root.data === 'object') {
-    const data = root.data as Record<string, unknown>;
-    return data.energyData !== undefined || typeof data.sn === 'string' || data.dt !== undefined;
+  if ('data' in root) {
+    if (root.data === null) return true;
+    if (Array.isArray(root.data)) return true;
+    if (root.data && typeof root.data === 'object') {
+      return hasRealtimeBusinessFields(root.data as Record<string, unknown>);
+    }
+    return false;
   }
-  return root.energyData !== undefined || (typeof root.sn === 'string' && root.dt !== undefined);
+  return hasRealtimeBusinessFields(root);
 }
 
-function unwrapRealtimeBody(payload: unknown): Record<string, unknown> {
+/**
+ * Extrai o objeto de negócio do envelope AUXSOL.
+ *
+ * Observado na validação real (Sprint 2.1.1):
+ * `{ code: "AWX-0000", msg: null, data: null }` → sem inversor (retorna null).
+ *
+ * Contrato documentado / fixtures:
+ * `{ code, msg, data: { sn, dt, energyData, ... } }` → o objeto em data.
+ *
+ * Lista (`data: []`) sem critério de SN não é selecionada arbitrariamente.
+ */
+export function extractAuxsolRealtimePayload(
+  payload: unknown,
+  context?: { serialNumber?: string },
+): Record<string, unknown> | null {
   if (!payload || typeof payload !== 'object') {
     throw new AuxsolInvalidPayloadError('Payload realtime AUXSOL inválido.');
   }
@@ -108,13 +130,32 @@ function unwrapRealtimeBody(payload: unknown): Record<string, unknown> {
         `Resposta realtime AUXSOL rejeitada (code=${root.code}).`,
       );
     }
-    if (root.data === null) return {};
+    if (root.data === null) return null;
+    if (Array.isArray(root.data)) {
+      return extractRealtimeFromArray(root.data, context?.serialNumber);
+    }
     if (!root.data || typeof root.data !== 'object') {
       throw new AuxsolInvalidPayloadError('Payload realtime AUXSOL sem data.');
     }
     return root.data as Record<string, unknown>;
   }
-  return root;
+  return hasRealtimeBusinessFields(root) ? root : null;
+}
+
+function extractRealtimeFromArray(items: unknown[], serialNumber?: string) {
+  if (items.length === 0) return null;
+  const objects = items.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object' && !Array.isArray(item));
+  const wanted = serialNumber?.trim();
+  if (wanted) {
+    const matches = objects.filter((item) => typeof item.sn === 'string' && item.sn.trim() === wanted);
+    if (matches.length === 1) return matches[0];
+    if (matches.length > 1) {
+      throw new AuxsolInvalidPayloadError('Realtime AUXSOL retornou mais de um objeto para o mesmo SN.');
+    }
+  }
+  throw new AuxsolInvalidPayloadError(
+    'Realtime AUXSOL retornou lista sem objeto identificável pelo SN. Nenhum item foi escolhido arbitrariamente.',
+  );
 }
 
 /**
@@ -133,8 +174,8 @@ export function normalizeAuxsolRealtime(
   payload: unknown,
   context?: { inverterId?: string; serialNumber?: string },
 ): NormalizedMonitoringData[] {
-  const data = unwrapRealtimeBody(payload);
-  if (!Object.keys(data).length) {
+  const data = extractAuxsolRealtimePayload(payload, context);
+  if (!data || !Object.keys(data).length) {
     return [];
   }
 

@@ -66,9 +66,9 @@ Browser → API B7 → Integration Service → SecretProvider → Manufacturer C
 
 O frontend nunca chama o fabricante. Respostas HTTP e logs não incluem token, secret ou API key.
 
-Variáveis AUXSOL usadas hoje: `AUXSOL_API_BASE_URL`, `AUXSOL_API_TIMEOUT_MS`, `AUXSOL_HTTP_MAX_RETRIES`, `AUXSOL_MOCK_MODE`, `AUXSOL_ALLOW_MOCK_IN_PRODUCTION`, `AUXSOL_PERSIST_READINGS`, `AUXSOL_SECRET_REF`.
+Variáveis AUXSOL usadas hoje: `AUXSOL_API_BASE_URL`, `AUXSOL_APP_ID`, `AUXSOL_APP_SECRET`, `AUXSOL_SECRET_REF`, `AUXSOL_API_TIMEOUT_MS`, `AUXSOL_HTTP_MAX_RETRIES`, `AUXSOL_TOKEN_REFRESH_MARGIN_MS`, `AUXSOL_MOCK_MODE`, `AUXSOL_ALLOW_MOCK_IN_PRODUCTION`, `AUXSOL_PERSIST_READINGS`.
 
-Não preencher URL inventada. `CLIENT_ID` / `CLIENT_SECRET` / `API_KEY` só serão adicionados se o contrato oficial exigir.
+Credencial atual destinada à validação técnica. Deve ser substituída por credencial própria/rotacionada antes da entrada em produção. Nunca colocar `APP_SECRET` no código, no Git ou em logs.
 
 ## Documentos
 

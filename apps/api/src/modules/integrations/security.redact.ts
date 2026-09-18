@@ -6,11 +6,25 @@ export function omitSensitiveKeys(fields: Record<string, string | number | boole
   );
 }
 
-export function stripSensitiveObject(payload: unknown) {
-  if (!payload || typeof payload !== 'object') return payload;
-  const clone = JSON.parse(JSON.stringify(payload)) as Record<string, unknown>;
-  for (const key of Object.keys(clone)) {
-    if (SENSITIVE_FIELD_KEY.test(key)) delete clone[key];
+function redactDeep(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(redactDeep);
+  if (!value || typeof value !== 'object') return value;
+  const result: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+    if (SENSITIVE_FIELD_KEY.test(key)) continue;
+    result[key] = redactDeep(item);
   }
-  return clone;
+  return result;
+}
+
+/** Remove campos sensíveis em qualquer profundidade. Não altera o objeto original. */
+export function stripSensitiveObject(payload: unknown) {
+  if (payload === undefined) return undefined;
+  let clone: unknown;
+  try {
+    clone = JSON.parse(JSON.stringify(payload));
+  } catch {
+    return undefined;
+  }
+  return redactDeep(clone);
 }

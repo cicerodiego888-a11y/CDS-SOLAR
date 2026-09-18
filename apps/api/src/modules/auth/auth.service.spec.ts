@@ -48,6 +48,12 @@ describe('AuthService', () => {
     expect(result.user.name).toBe('Administrador B7 Solar');
   });
 
+  it('ignora espaços nas bordas do usuário e da senha', async () => {
+    prisma.user.findFirst.mockResolvedValue(user());
+    const result = await service.login('  Diego  ', '  B7@123456  ');
+    expect(result.accessToken).toBeTruthy();
+  });
+
   it('rejeita usuário inexistente com a mesma falha', async () => {
     prisma.user.findFirst.mockResolvedValue(null);
     await expect(service.login('naoexiste@b7solar.local', 'B7@123456')).rejects.toBeInstanceOf(UnauthorizedException);

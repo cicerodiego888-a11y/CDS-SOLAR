@@ -17,6 +17,28 @@ export function auxsolInverterRealtimeBySnPath(sn: string) {
   return `/analysis/inverterReport/findInverterRealTimeInfoBySn/${encodeURIComponent(sn)}`;
 }
 
+/** Path oficial de listagem de usinas — descoberta read-only (Sprint 2.2). */
+export const AUXSOL_PLANT_LIST_PATH = '/archive/plant/list';
+
+/** Path oficial de inversores por usina — `{plantId}` substituído em runtime. */
+export const AUXSOL_INVERTERS_BY_PLANT_PATH = '/archive/inverter/getInverterByPlant/{plantId}';
+
+/**
+ * Paginação documentada AUXSOL (MyBatis-Plus): `current` + `size`.
+ * Sem inventar outros query params.
+ */
+export function auxsolPlantListPath(params: { current: number; size: number }) {
+  const query = new URLSearchParams({
+    current: String(params.current),
+    size: String(params.size),
+  });
+  return `${AUXSOL_PLANT_LIST_PATH}?${query.toString()}`;
+}
+
+export function auxsolInvertersByPlantPath(plantId: string) {
+  return `/archive/inverter/getInverterByPlant/${encodeURIComponent(plantId)}`;
+}
+
 /**
  * Margem de renovação do token antes de expires_in.
  * Decisão Fase 1: 60s (evita usar token na janela final de expiração).

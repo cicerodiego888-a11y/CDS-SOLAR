@@ -6,5 +6,11 @@ type Props = {
 };
 
 export function StatusBadge({ label, status }: Props) {
-  return <span className={`ui-badge ui-badge-${getStatusTone(status)}`}>{label}</span>;
+  const tone = getStatusTone(status);
+  return (
+    <span className={`ui-badge ui-badge-${tone}`}>
+      <i className={`status-dot ${tone}`} aria-hidden="true" />
+      {label}
+    </span>
+  );
 }

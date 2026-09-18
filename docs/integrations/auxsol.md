@@ -33,9 +33,15 @@ Camada `AuxsolClient` → transport:
 |----------|--------|
 | `POST /auth/token` | Implementado (Fase 1) |
 | `GET /analysis/inverterReport/findInverterRealTimeInfoBySn/{sn}` | Implementado (Fase 2) |
+| `GET /archive/plant/list?current=&size=` | Descoberta read-only (Sprint 2.2) — não persiste |
+| `GET /archive/inverter/getInverterByPlant/{plantId}` | Descoberta read-only (Sprint 2.2) — não persiste |
 | Demais archive/analysis/collector/histórico | **Não implementados** |
 
-Nenhuma Base URL é inventada — configure `AUXSOL_API_BASE_URL` com a URL oficial.
+Base URL oficial de validação (somente via `AUXSOL_API_BASE_URL`, nunca hardcoded no Service):
+
+`https://eu.auxsolcloud.com/auxsol-api`
+
+Credencial atual destinada à validação técnica. Deve ser substituída por credencial própria/rotacionada antes da entrada em produção. `APP_SECRET` existe apenas em variável de ambiente local (`AUXSOL_APP_SECRET` ou `AUXSOL_SECRET_REF`).
 
 ## Identificadores
 
@@ -63,6 +69,55 @@ Fixtures MOCK legadas (`powerW` / Wh) continuam convertendo W→kW / Wh→kWh ap
 
 Leituras reais só quando modo `live` **e** `AUXSOL_PERSIST_READINGS=true`, via `IntegrationCollectionService` / `MonitoringPersistenceService`.
 
+## Validação real — AUXSOL 2.1 / 2.1.1
+
+Credencial atual destinada à validação técnica. Deve ser substituída por credencial própria/rotacionada antes da entrada em produção.
+
+| Item | Valor observado |
+|------|-----------------|
+| Base URL | `https://eu.auxsolcloud.com/auxsol-api` via `AUXSOL_API_BASE_URL` |
+| Auth | `POST /auth/token` → HTTP 200, `code=AWX-0000`, `expiresIn=43200` |
+| Realtime | `GET /analysis/inverterReport/findInverterRealTimeInfoBySn/{sn}` |
+| SN | `ASN-10SL2508230101` (não usar o Gateway como SN) |
+| Periodicidade AUXSOL | ~5 min (`MONITORING_COLLECTION_INTERVAL_SECONDS=300`) |
+| Persistência nesta validação | `AUXSOL_PERSIST_READINGS=false` |
+
+Estrutura real do envelope (sanitizada):
+
+```json
+{
+  "code": "AWX-0000",
+  "msg": null,
+  "data": null
+}
+```
+
+Chaves do JSON: `code`, `msg`, `data`. Nenhuma chave irmã. `dataKind=null`.
+
+Campos documentados (`sn`, `pId`, `id`, `dt`, `energyData.power/y/ym/yt`, `ratedPower`, `type`, `lastCommTime`, `alarmCurrent`, `batteryData`, `gridData`, `loadData`) **não vieram** neste payload.
+
+Unidades: não confirmadas (não há valores).
+Timestamp: não confirmado (não há `dt`).
+Normalizer: mantido. `data=null` → lista vazia; nenhum campo é inventado; `Date.now()` não é usado.
+
+Coleta one-shot (sem persistir): `pnpm --filter @b7/api auxsol:validate`.
+Descoberta de plantas/inversores (sem persistir): `pnpm --filter @b7/api auxsol:discover`.
+Endpoint interno B7: `POST /api/integrations/collect/:inverterId` (ID interno, não o SN).
+
+### Divergências observadas
+
+DOCUMENTAÇÃO:
+campo esperado = `data` objeto com `sn`, `pId`, `id`, `dt`, `energyData`
+
+PAYLOAD REAL:
+campo recebido = `data: null` (envelope `code/msg/data` apenas)
+
+IMPACTO:
+HTTP 200 + `AWX-0000` sem leitura normalizável. Sem `powerKw` / energias / timestamp.
+
+AÇÃO:
+Não inventar dados. Persistência OFF. Verificar no lado AUXSOL: usuário, planta, cadastro do inversor, permissão da APP e disponibilidade de telemetria. Não adicionar query params não documentados.
+
 ## Pendências explícitas
 
 - Histórico / curvas
@@ -71,8 +126,28 @@ Leituras reais só quando modo `live` **e** `AUXSOL_PERSIST_READINGS=true`, via 
 - Bateria / grid / load detalhados
 - Regras avançadas de alarmes a partir de `alarmCurrent`
 - Rate limiting outbound completo
-- Credenciais / Base URL / sandbox reais da AUXSOL
-- Confirmação formal de unidades no PDF se divergirem do mapeamento 1:1
+- Rotacionar a credencial de validação antes de produção
+- Telemetria realtime do SN `ASN-10SL2508230101` ainda retorna `data=null` na conta de validação
+- Confirmação formal de unidades no payload real quando `data` vier preenchido
+- Sprint 2.2: APP_ID autenticado vê 10 plantas / 10 inversores; o SN `ASN-10SL2508230101` **não** está nesse escopo (`TARGET_FOUND=false`). Realtime do alvo não foi reconsultado. Diagnóstico **B**.
+
+## Descoberta real — AUXSOL 2.2
+
+Somente leitura. Sem persistência, binding ou migration.
+
+| Item | Valor observado |
+| --- | --- |
+| Auth | HTTP 200, `AWX-0000`, `mode=live` |
+| Plantas | 10 (`GET /archive/plant/list?current=1&size=100`) |
+| Inversores | 1 por planta (`GET /archive/inverter/getInverterByPlant/{plantId}`) |
+| SN alvo | `ASN-10SL2508230101` — **não encontrado** |
+| Gateway alvo | `A012509010791620` — não veio no payload de listagem |
+| Realtime do alvo | não executado (SN ausente na listagem) |
+| Persistência | `executed=false` |
+
+SNs visíveis neste APP_ID (sanitizado): `ASN-7.5SL251101001356`, `ASN-10SL251016000397`, `ASN-4SL-G2251016000261`, `ASN-6SL-G22507160280`, `ASN-6SL-G22507160137`, `ASN-10SL250924000132`, `ASN-6SL-G2251101001036`, `ASN-5SL-G2251101001022`, `ASN-6SL-G2251101001122`, `ASN-5SL-G2250924000007`.
+
+Há dois `ASN-10SL` no escopo, com SNs diferentes do equipamento do cliente. Ação: verificar no lado AUXSOL se o inversor está na conta/APP correta.
 
 ## Variáveis de ambiente
 

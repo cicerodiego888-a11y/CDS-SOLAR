@@ -24,7 +24,11 @@ function LoginForm() {
     try {
       await login(email, password);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Usuário ou senha inválidos.');
+      if (err instanceof ApiError) {
+        setError(err.message);
+      } else {
+        setError('Não foi possível conectar à API. Confirme se o backend e o PostgreSQL estão no ar.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -34,16 +38,16 @@ function LoginForm() {
     <div className="login-page">
       <section className="login-brand">
         <div>
-          <span className="brand-mark">B7</span>
+          <span className="brand-mark" aria-hidden="true">B7</span>
           <h1>B7 Solar</h1>
-          <p>PLATFORM</p>
-          <small>Monitoramento profissional de usinas fotovoltaicas</small>
+          <p>Plataforma de Gestão</p>
+          <small>Operação, monitoramento e inteligência para usinas fotovoltaicas.</small>
         </div>
       </section>
       <section className="login-form-wrap">
         <form className="login-form" onSubmit={onSubmit}>
-          <h2>Entrar no B7 Solar</h2>
-          <p>Use suas credenciais de acesso à plataforma.</p>
+          <h2>Acessar a plataforma</h2>
+          <p>Entre com suas credenciais para continuar.</p>
           {error ? <div className="login-error" role="alert">{error}</div> : null}
           <TextField id="email" label="Usuário" type="text" value={email} onChange={setEmail} placeholder="Diego" />
           <TextField id="senha" label="Senha" type="password" value={password} onChange={setPassword} placeholder="Digite sua senha" />

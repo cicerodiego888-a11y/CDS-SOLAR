@@ -99,6 +99,36 @@ describe('AuxsolTransport modes + live realtime', () => {
     expect(authCalls).toHaveLength(1);
   });
 
+  it('LIVE collect preserva o JSON AUXSOL completo, inclusive chaves irmãs de data', async () => {
+    const fetchImpl = jest.fn(async (url: string | URL) => {
+      if (String(url).endsWith('/auth/token')) {
+        return jsonResponse(200, {
+          code: AUXSOL_SUCCESS_CODE,
+          data: { access_token: 'test-access-token', expires_in: 43200 },
+        });
+      }
+      return jsonResponse(200, {
+        code: AUXSOL_SUCCESS_CODE,
+        msg: null,
+        data: null,
+        sn: 'TEST-SN-001',
+        dt: '2026-09-10 15:30:00',
+      });
+    });
+    const transport = new HttpAuxsolTransport({
+      baseUrl: 'https://auxsol.example.test',
+      appId: 'id',
+      appSecret: 'secret',
+      fetchImpl: fetchImpl as never,
+    });
+    await expect(transport.execute('collect', { serialNumber: 'TEST-SN-001' })).resolves.toMatchObject({
+      code: AUXSOL_SUCCESS_CODE,
+      data: null,
+      sn: 'TEST-SN-001',
+      dt: '2026-09-10 15:30:00',
+    });
+  });
+
   it('LIVE collect exige SN', async () => {
     const transport = new HttpAuxsolTransport({
       baseUrl: 'https://auxsol.example.test',
@@ -137,6 +167,55 @@ describe('AuxsolTransport modes + live realtime', () => {
       fetchImpl: jest.fn() as never,
     });
     await expect(transport.execute('testConnection')).rejects.toBeInstanceOf(AuxsolContractUnavailableError);
+  });
+
+  it('LIVE listPlants chama GET /archive/plant/list com current e size', async () => {
+    const fetchImpl = jest.fn(async (url: string | URL, init?: RequestInit) => {
+      const href = String(url);
+      if (href.endsWith('/auth/token')) {
+        return jsonResponse(200, {
+          code: AUXSOL_SUCCESS_CODE,
+          data: { access_token: 'test-access-token', expires_in: 43200 },
+        });
+      }
+      expect(href).toBe('https://auxsol.example.test/archive/plant/list?current=1&size=100');
+      expect(init?.method).toBe('GET');
+      expect((init?.headers as Record<string, string>).Authorization).toBe('Bearer test-access-token');
+      return jsonResponse(200, { code: AUXSOL_SUCCESS_CODE, msg: null, data: { records: [] } });
+    });
+    const transport = new HttpAuxsolTransport({
+      baseUrl: 'https://auxsol.example.test',
+      appId: 'id',
+      appSecret: 'secret',
+      fetchImpl: fetchImpl as never,
+    });
+    await expect(transport.listPlants({ current: 1, size: 100 })).resolves.toMatchObject({
+      code: AUXSOL_SUCCESS_CODE,
+      data: { records: [] },
+    });
+  });
+
+  it('LIVE getInvertersByPlant usa plantId no path', async () => {
+    const fetchImpl = jest.fn(async (url: string | URL) => {
+      if (String(url).endsWith('/auth/token')) {
+        return jsonResponse(200, {
+          code: AUXSOL_SUCCESS_CODE,
+          data: { access_token: 'tok', expires_in: 1000 },
+        });
+      }
+      expect(String(url)).toBe('https://auxsol.example.test/archive/inverter/getInverterByPlant/plant-1');
+      return jsonResponse(200, { code: AUXSOL_SUCCESS_CODE, data: [] });
+    });
+    const transport = new HttpAuxsolTransport({
+      baseUrl: 'https://auxsol.example.test',
+      appId: 'id',
+      appSecret: 'secret',
+      fetchImpl: fetchImpl as never,
+    });
+    await expect(transport.getInvertersByPlant('plant-1')).resolves.toMatchObject({
+      code: AUXSOL_SUCCESS_CODE,
+      data: [],
+    });
   });
 
   it('LIVE realtime propaga 401 como AuxsolAuthError', async () => {

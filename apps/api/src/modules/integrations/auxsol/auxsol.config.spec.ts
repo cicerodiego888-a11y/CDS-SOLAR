@@ -1,8 +1,10 @@
 import {
   auxsolAppId,
   auxsolAppSecret,
+  auxsolInvertersByPlantPath,
   auxsolLiveCredentialsConfigured,
   auxsolMockAllowed,
+  auxsolPlantListPath,
   resolveAuxsolMode,
 } from './auxsol.config';
 
@@ -50,5 +52,10 @@ describe('Configuração AUXSOL', () => {
     delete process.env.AUXSOL_APP_SECRET;
     delete process.env.AUXSOL_SECRET_REF;
     expect(auxsolLiveCredentialsConfigured()).toBe(false);
+  });
+
+  it('monta paths oficiais de descoberta com current/size e plantId', () => {
+    expect(auxsolPlantListPath({ current: 1, size: 100 })).toBe('/archive/plant/list?current=1&size=100');
+    expect(auxsolInvertersByPlantPath('plant-1')).toBe('/archive/inverter/getInverterByPlant/plant-1');
   });
 });

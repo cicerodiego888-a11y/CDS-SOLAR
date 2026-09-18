@@ -15,7 +15,7 @@ import { SelectField } from '../../components/ui/SelectField';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { TextField } from '../../components/ui/TextField';
 import { ApiError, fetchApi } from '../../lib/api';
-import { can, formatPower, PLANT_STATUS_OPTIONS, plantOperationalLabel } from '../../lib/operational';
+import { can, formatPower, parsePowerKw, PLANT_STATUS_OPTIONS, plantOperationalLabel } from '../../lib/operational';
 
 type Customer = { id: string; name: string };
 type Plant = {
@@ -44,6 +44,7 @@ function UsinasContent() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Plant | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [formError, setFormError] = useState('');
 
   async function load() {
     try {
@@ -72,12 +73,14 @@ function UsinasContent() {
 
   function openCreate() {
     setEditing(null);
+    setFormError('');
     setForm({ ...emptyForm, customerId: presetCustomer });
     setOpen(true);
   }
 
   function openEdit(row: Plant) {
     setEditing(row);
+    setFormError('');
     setForm({
       customerId: row.customerId,
       name: row.name,
@@ -91,22 +94,38 @@ function UsinasContent() {
   }
 
   async function save() {
+    const installedPowerKw = parsePowerKw(form.installedPowerKw);
+    if (!form.customerId) {
+      setFormError('Selecione o cliente.');
+      return;
+    }
+    if (!form.name.trim()) {
+      setFormError('Informe o nome da usina.');
+      return;
+    }
+    if (installedPowerKw === undefined) {
+      setFormError('Informe a potência instalada em kW. Use ponto ou vírgula, por exemplo 10,5.');
+      return;
+    }
     const payload = {
       customerId: form.customerId,
-      name: form.name,
-      installedPowerKw: Number(form.installedPowerKw),
-      distributor: form.distributor,
-      consumerUnit: form.consumerUnit,
-      address: form.address,
+      name: form.name.trim(),
+      installedPowerKw,
+      distributor: form.distributor.trim() || undefined,
+      consumerUnit: form.consumerUnit.trim() || undefined,
+      address: form.address.trim() || undefined,
       status: form.status,
     };
     try {
+      setFormError('');
       if (editing) await fetchApi(`/plants/${editing.id}`, { method: 'PATCH', body: JSON.stringify(payload) });
       else await fetchApi('/plants', { method: 'POST', body: JSON.stringify(payload) });
       setOpen(false);
       await load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Não foi possível salvar a usina.');
+      const message = err instanceof ApiError ? err.message : 'Não foi possível salvar a usina.';
+      setFormError(message);
+      setError(message);
     }
   }
 
@@ -155,6 +174,7 @@ function UsinasContent() {
         </section>
       ) : null}
       <Modal open={open} title={editing ? 'Editar usina' : 'Nova usina'} onClose={() => setOpen(false)} onConfirm={() => void save()}>
+        {formError ? <ErrorMessage message={formError} /> : null}
         <div className="form-grid">
           <SelectField id="cliente" label="Cliente" value={form.customerId} options={customers.map((item) => ({ value: item.id, label: item.name }))} placeholder="Selecione o cliente" onChange={(customerId) => setForm({ ...form, customerId })} />
           <TextField id="nome-usina" label="Nome da usina" value={form.name} onChange={(name) => setForm({ ...form, name })} />

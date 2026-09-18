@@ -29,6 +29,11 @@ export function PlantDistribution({ online, offline, maintenance, plants }: Prop
           <Button variant="secondary">Ver todas</Button>
         </Link>
       </div>
+      <div className="status-rings" aria-label="Resumo operacional das usinas">
+        <div className="status-ring success"><strong>{online}</strong><span>Online</span></div>
+        <div className="status-ring danger"><strong>{offline}</strong><span>Offline</span></div>
+        <div className="status-ring neutral"><strong>{maintenance}</strong><span>Manutenção</span></div>
+      </div>
       <div className="distribution-bars">
         <DistributionRow label="Online" value={online} total={total} tone="success" />
         <DistributionRow label="Offline" value={offline} total={total} tone="danger" />

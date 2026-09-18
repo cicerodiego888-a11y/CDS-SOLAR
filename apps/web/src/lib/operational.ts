@@ -46,6 +46,14 @@ export function can(user: AuthUser | null | undefined, permission: string) {
   return Boolean(user?.permissions?.includes(permission));
 }
 
+/** Aceita "10", "10,5" e "10.5". Vazio ou inválido retorna undefined. */
+export function parsePowerKw(value: string) {
+  const normalized = value.trim().replace(/\s/g, '').replace(',', '.');
+  if (!normalized) return undefined;
+  const number = Number(normalized);
+  return Number.isFinite(number) ? number : undefined;
+}
+
 export function formatPower(value: unknown) {
   if (value === null || value === undefined || value === '') return '—';
   const number = Number(value);

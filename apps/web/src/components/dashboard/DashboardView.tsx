@@ -66,12 +66,14 @@ export function DashboardView() {
 
   return (
     <div className="shell dashboard">
-      <header className="header dashboard-header">
+      <header className="dashboard-hero">
         <div>
-          <h1>Olá, {userName}!</h1>
-          <p>Aqui está o panorama das suas usinas solares em tempo real.</p>
+          <div className="eyebrow">B7 Solar</div>
+          <h1>Olá, {userName}</h1>
+          <p>Panorama operacional das usinas em tempo real, com dados oficiais do monitoramento.</p>
           <small className="clock">{formatClock(now)}</small>
         </div>
+        <span className="status">Sistema operacional</span>
       </header>
 
       {loading && !dashboard ? <LoadingState message="Carregando painel..." /> : null}
@@ -106,12 +108,12 @@ export function DashboardView() {
             <MetricCard
               title="Geração no mês"
               value={formatEnergyKwh(dashboard.energyMonth.valueKwh ?? null, dashboard.energyMonth.hasData)}
-              accent="orange"
+              accent="green"
             />
             <MetricCard
               title="Geração total"
               value={formatEnergyKwh(dashboard.energyTotal.valueKwh ?? null, dashboard.energyTotal.hasData)}
-              accent="purple"
+              accent="blue"
             />
             <MetricCard
               title="Usinas"

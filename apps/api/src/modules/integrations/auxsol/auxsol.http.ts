@@ -18,6 +18,7 @@ export type AuxsolHttpRequest = {
   baseUrl: string;
   path: string;
   method?: 'GET' | 'POST';
+  query?: Record<string, string | number | boolean | undefined | null>;
   body?: unknown;
   accessToken?: string;
   timeoutMs?: number;
@@ -31,6 +32,9 @@ export type AuxsolHttpResponse = {
   code?: string;
   msg?: string | null;
   data: unknown;
+  /** JSON parseado completo da AUXSOL (sem reconstrução). Não logar este objeto. */
+  body?: unknown;
+  envelopeKeys?: string[];
 };
 
 export async function withTimeout<T>(factory: (signal: AbortSignal) => Promise<T>, timeoutMs = auxsolTimeoutMs()) {
@@ -44,6 +48,21 @@ export async function withTimeout<T>(factory: (signal: AbortSignal) => Promise<T
   } finally {
     clearTimeout(timer);
   }
+}
+
+function appendQuery(
+  path: string,
+  query?: Record<string, string | number | boolean | undefined | null>,
+) {
+  if (!query) return path;
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (value === undefined || value === null || value === '') continue;
+    params.set(key, String(value));
+  }
+  const qs = params.toString();
+  if (!qs) return path;
+  return path.includes('?') ? `${path}&${qs}` : `${path}?${qs}`;
 }
 
 function joinUrl(baseUrl: string, path: string) {
@@ -100,7 +119,7 @@ export async function auxsolHttpRequest(request: AuxsolHttpRequest): Promise<Aux
     throw new AuxsolTransientError('HTTP fetch indisponível no runtime.');
   }
 
-  const url = joinUrl(request.baseUrl, request.path);
+  const url = joinUrl(request.baseUrl, appendQuery(request.path, request.query));
   const method = request.method ?? 'GET';
   const headers: Record<string, string> = {
     Accept: 'application/json',
@@ -158,11 +177,16 @@ export async function auxsolHttpRequest(request: AuxsolHttpRequest): Promise<Aux
   const msg = record && 'msg' in record ? (record.msg as string | null) : undefined;
   const data = record && 'data' in record ? record.data : payload;
 
+  const envelopeKeys = record ? Object.keys(record) : [];
+  const dataKind = Array.isArray(data) ? 'array' : data === null ? 'null' : typeof data;
+
   console.info(integrationLog({
     operation: 'http',
     endpoint: request.path,
     httpStatus: response.status,
     auxsolCode: code,
+    envelopeKeys: envelopeKeys.join(',') || undefined,
+    dataKind,
     durationMs: Date.now() - started,
   }));
 
@@ -170,7 +194,7 @@ export async function auxsolHttpRequest(request: AuxsolHttpRequest): Promise<Aux
     mapHttpStatusError(response.status, code, msg);
   }
 
-  return { status: response.status, code, msg, data };
+  return { status: response.status, code, msg, data, body: record ?? payload, envelopeKeys };
 }
 
 export type AuxsolTokenResponse = {
@@ -239,6 +263,9 @@ export async function requestAuxsolAccessToken(params: {
     endpoint: AUXSOL_AUTH_TOKEN_PATH,
     status: 'success',
     httpStatus: response.status,
+    auxsolCode: response.code,
+    authenticated: true,
+    expiresIn,
     durationMs: Date.now() - started,
   }));
 

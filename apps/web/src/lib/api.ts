@@ -24,6 +24,9 @@ async function requestWithTimeout(url: string, init: RequestInit = {}) {
     if (error instanceof Error && error.name === 'AbortError') {
       throw new ApiError(408, 'A solicitação demorou demais. Tente novamente.');
     }
+    if (error instanceof TypeError) {
+      throw new ApiError(503, 'A API não está respondendo em localhost:3001. Verifique se o ambiente B7 está no ar.');
+    }
     throw error;
   } finally {
     clearTimeout(timeout);
@@ -65,10 +68,13 @@ export async function loginRequest(email: string, password: string) {
   const response = await requestWithTimeout(`${API_BASE}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email: email.trim(), password: password.trim() }),
   });
   if (!response.ok) {
-    throw new ApiError(response.status, 'Usuário ou senha inválidos.');
+    if (response.status === 401 || response.status === 400) {
+      throw new ApiError(response.status, 'Usuário ou senha inválidos.');
+    }
+    throw new ApiError(response.status, await readApiMessage(response, 'Não foi possível entrar agora. Tente novamente.'));
   }
   return response.json() as Promise<{ accessToken: string; user: import('./auth-session').AuthUser }>;
 }

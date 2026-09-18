@@ -5,8 +5,9 @@ export const INTEGRATION_QUEUE_NAME = 'b7-integrations';
 export const COLLECT_JOB_ATTEMPTS = 3;
 export const COLLECT_JOB_BACKOFF_MS = 2000;
 
+/** BullMQ 6 rejeita custom jobId com `:` (exceto o formato antigo a:b:c). */
 export function collectJobId(inverterId: string) {
-  return `collect-inverter:${inverterId}`;
+  return `collect-inverter_${inverterId.replace(/:/g, '-')}`;
 }
 
 export function collectionIntervalSeconds() {

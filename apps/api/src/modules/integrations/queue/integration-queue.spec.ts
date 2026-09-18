@@ -7,6 +7,14 @@ import {
 } from './integration-queue.constants';
 import { IntegrationQueueService } from './integration-queue.service';
 
+describe('collectJobId', () => {
+  it('não usa dois-pontos (BullMQ 6 rejeita custom id com :)', () => {
+    expect(collectJobId('i1')).toBe('collect-inverter_i1');
+    expect(collectJobId('a:b')).toBe('collect-inverter_a-b');
+    expect(collectJobId('i1')).not.toContain(':');
+  });
+});
+
 describe('IntegrationQueueService', () => {
   function setup(overrides: { ready?: boolean; existingState?: string | null } = {}) {
     const add = jest.fn().mockResolvedValue({ id: collectJobId('i1') });
@@ -30,11 +38,11 @@ describe('IntegrationQueueService', () => {
   it('cria job COLLECT_INVERTER com id determinístico', async () => {
     const { service, add } = setup();
     const result = await service.enqueueCollect('i1', 'SCHEDULED');
-    expect(result).toEqual({ ok: true, jobId: 'collect-inverter:i1' });
+    expect(result).toEqual({ ok: true, jobId: 'collect-inverter_i1' });
     expect(add).toHaveBeenCalledWith(
       COLLECT_INVERTER_JOB,
       { inverterId: 'i1', reason: 'SCHEDULED' },
-      expect.objectContaining({ jobId: 'collect-inverter:i1', attempts: COLLECT_JOB_ATTEMPTS }),
+      expect.objectContaining({ jobId: 'collect-inverter_i1', attempts: COLLECT_JOB_ATTEMPTS }),
     );
   });
 
@@ -87,5 +95,15 @@ describe('IntegrationQueueService', () => {
       waiting: 1, active: 2, completed: 3, failed: 4, delayed: 5, redis: 'ok',
     });
     expect(JSON.stringify(snapshot)).not.toMatch(/password|token|secret|authorization/i);
+  });
+
+  it('não deixa falha do BullMQ derrubar o processo', async () => {
+    const { service, add } = setup();
+    add.mockRejectedValue(new Error('Custom Id cannot contain :'));
+    await expect(service.enqueueCollect('i1')).resolves.toEqual({
+      ok: false,
+      jobId: 'collect-inverter_i1',
+      reason: 'ENQUEUE_FAILED',
+    });
   });
 });

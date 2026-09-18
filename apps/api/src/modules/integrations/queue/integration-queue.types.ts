@@ -9,7 +9,7 @@ export interface QueueEnqueueResult {
   ok: boolean;
   jobId?: string;
   skipped?: boolean;
-  reason?: 'REDIS_UNAVAILABLE' | 'DUPLICATE' | 'INVALID_PAYLOAD';
+  reason?: 'REDIS_UNAVAILABLE' | 'DUPLICATE' | 'INVALID_PAYLOAD' | 'ENQUEUE_FAILED';
 }
 
 export interface QueueSnapshot {

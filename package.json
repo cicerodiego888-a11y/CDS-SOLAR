@@ -5,6 +5,7 @@
   "packageManager": "pnpm@10.0.0",
   "scripts": {
     "dev": "turbo dev",
+    "start:b7": "node scripts/start-b7-dev.mjs",
     "build": "turbo build",
     "lint": "turbo lint",
     "test": "turbo test",

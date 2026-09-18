@@ -66,8 +66,18 @@ export class IntegrationQueueService implements OnModuleInit, OnModuleDestroy {
       await existing.remove().catch(() => undefined);
     }
 
-    await queue.add(COLLECT_INVERTER_JOB, { inverterId: id, reason }, { ...defaultJobOptions, jobId });
-    return { ok: true, jobId };
+    try {
+      await queue.add(COLLECT_INVERTER_JOB, { inverterId: id, reason }, { ...defaultJobOptions, jobId });
+      return { ok: true, jobId };
+    } catch (error) {
+      console.error({
+        scope: 'COLLECTION',
+        event: 'enqueue failed',
+        inverterId: id,
+        errorName: error instanceof Error ? error.name : 'unknown',
+      });
+      return { ok: false, jobId, reason: 'ENQUEUE_FAILED' };
+    }
   }
 
   async enqueueAlertEvaluation(reason: CollectJobReason = 'SCHEDULED'): Promise<QueueEnqueueResult> {
@@ -81,11 +91,20 @@ export class IntegrationQueueService implements OnModuleInit, OnModuleDestroy {
       }
       await existing.remove().catch(() => undefined);
     }
-    await queue.add(EVALUATE_MONITORING_ALERTS_JOB, { inverterId: '', reason } as CollectInverterJob, {
-      ...defaultJobOptions,
-      jobId: EVALUATE_ALERTS_JOB_ID,
-    });
-    return { ok: true, jobId: EVALUATE_ALERTS_JOB_ID };
+    try {
+      await queue.add(EVALUATE_MONITORING_ALERTS_JOB, { inverterId: '', reason } as CollectInverterJob, {
+        ...defaultJobOptions,
+        jobId: EVALUATE_ALERTS_JOB_ID,
+      });
+      return { ok: true, jobId: EVALUATE_ALERTS_JOB_ID };
+    } catch (error) {
+      console.error({
+        scope: 'COLLECTION',
+        event: 'alert enqueue failed',
+        errorName: error instanceof Error ? error.name : 'unknown',
+      });
+      return { ok: false, jobId: EVALUATE_ALERTS_JOB_ID, reason: 'ENQUEUE_FAILED' };
+    }
   }
 
   async enqueueMany(inverterIds: string[], reason: CollectJobReason = 'SCHEDULED') {

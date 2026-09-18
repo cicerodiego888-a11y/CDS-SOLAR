@@ -55,6 +55,24 @@ describe('PlantsService', () => {
     }).toThrow(ForbiddenException);
   });
 
+  it('cria usina sem concessionária e UC (campos legados opcionais)', async () => {
+    prisma.customer.findUnique.mockResolvedValue({ id: 'c1' });
+    prisma.plant.create.mockResolvedValue({ id: 'p2', name: 'Usina B' });
+    await service.create({
+      customerId: 'c1',
+      name: 'Usina B',
+      installedPowerKw: 8.5,
+    });
+    expect(prisma.plant.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        distributor: null,
+        consumerUnit: null,
+        installedPowerKw: 8.5,
+      }),
+      include: { customer: true },
+    });
+  });
+
   it('preserva campos legados distributor e consumerUnit no create', async () => {
     prisma.customer.findUnique.mockResolvedValue({ id: 'c1' });
     prisma.plant.create.mockResolvedValue({ id: 'p1', distributor: 'ENEL', consumerUnit: '123' });

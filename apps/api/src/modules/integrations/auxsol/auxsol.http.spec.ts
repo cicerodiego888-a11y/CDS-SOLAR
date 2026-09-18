@@ -173,6 +173,24 @@ describe('AUXSOL HTTP / auth contract', () => {
     expect(dumped.join('\n')).not.toContain('test-app-secret-value');
     expect(dumped.join('\n')).not.toContain('test-access-token-secret-value');
     expect(dumped.join('\n')).not.toMatch(/Bearer\s+\S+/i);
+    expect(dumped.join('\n')).toContain('"authenticated":true');
+    expect(dumped.join('\n')).toContain('"expiresIn":60');
+    expect(dumped.join('\n')).toContain('envelopeKeys');
+  });
+
+  it('anexa query string oficial sem alterar o path', async () => {
+    const fetchImpl = jest.fn(async (url: string | URL) => {
+      expect(String(url)).toBe(`${baseUrl}/archive/plant/list?current=1&size=100`);
+      return jsonResponse(200, { code: AUXSOL_SUCCESS_CODE, data: { records: [] } });
+    });
+    await auxsolHttpRequest({
+      baseUrl,
+      path: '/archive/plant/list',
+      method: 'GET',
+      query: { current: 1, size: 100 },
+      accessToken: 'test-access-token',
+      fetchImpl: fetchImpl as never,
+    });
   });
 
   it('anexa Authorization Bearer em requests autenticadas', async () => {

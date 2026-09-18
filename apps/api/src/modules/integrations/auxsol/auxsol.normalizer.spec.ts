@@ -1,5 +1,6 @@
-import { AUXSOL_FIXTURE_OPTIONAL_MISSING, AUXSOL_FIXTURE_VALID, AUXSOL_OFFICIAL_REALTIME_FIXTURE } from './auxsol.fixtures';
+import { AUXSOL_FIXTURE_OPTIONAL_MISSING, AUXSOL_FIXTURE_VALID, AUXSOL_OFFICIAL_REALTIME_FIXTURE, AUXSOL_REALTIME_EMPTY_DATA_FIXTURE } from './auxsol.fixtures';
 import {
+  extractAuxsolRealtimePayload,
   normalizeAuxsolFixture,
   normalizeAuxsolRealtime,
   normalizeAuxsolStatus,
@@ -102,5 +103,25 @@ describe('Normalização AUXSOL (contrato oficial realtime)', () => {
 
   it('retorna lista vazia quando data é null', () => {
     expect(normalizeAuxsolRealtime({ code: 'AWX-0000', data: null })).toEqual([]);
+    expect(normalizeAuxsolRealtime(AUXSOL_REALTIME_EMPTY_DATA_FIXTURE)).toEqual([]);
+    expect(extractAuxsolRealtimePayload(AUXSOL_REALTIME_EMPTY_DATA_FIXTURE)).toBeNull();
+  });
+
+  it('não escolhe arbitrariamente o primeiro item se data for lista', () => {
+    expect(() => extractAuxsolRealtimePayload({
+      code: 'AWX-0000',
+      data: [{ sn: 'OTHER', dt: '2026-09-10 15:30:00' }],
+    }, { serialNumber: 'ASN-10SL2508230101' })).toThrow(/lista sem objeto identificável/);
+  });
+
+  it('extrai da lista somente o objeto cujo sn coincide', () => {
+    const extracted = extractAuxsolRealtimePayload({
+      code: 'AWX-0000',
+      data: [
+        { sn: 'OTHER', dt: '2026-09-10 15:30:00' },
+        { sn: 'ASN-10SL2508230101', dt: '2026-09-10 15:31:00', energyData: { power: 2 } },
+      ],
+    }, { serialNumber: 'ASN-10SL2508230101' });
+    expect(extracted).toMatchObject({ sn: 'ASN-10SL2508230101', energyData: { power: 2 } });
   });
 });

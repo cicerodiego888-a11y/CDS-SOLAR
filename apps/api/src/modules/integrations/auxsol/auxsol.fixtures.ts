@@ -81,3 +81,14 @@ export const AUXSOL_OFFICIAL_REALTIME_FIXTURE = {
     },
   },
 };
+
+/**
+ * Envelope REAL observado na validação AUXSOL 2.1.1 (sanitizado).
+ * HTTP 200 + AWX-0000 com data=null. Sem credenciais/tokens.
+ */
+export const AUXSOL_REALTIME_EMPTY_DATA_FIXTURE = {
+  fixture: 'b7-auxsol-realtime-empty-data-observed',
+  code: 'AWX-0000',
+  msg: null,
+  data: null,
+};

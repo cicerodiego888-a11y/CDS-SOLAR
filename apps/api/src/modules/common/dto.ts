@@ -52,11 +52,11 @@ export class CreatePlantDto {
   @Type(() => Number) @IsNumber({}, { message: 'Informe a potência instalada.' }) @Min(0, { message: 'A potência deve ser maior ou igual a zero.' })
   installedPowerKw!: number;
 
-  @IsString() @IsNotEmpty({ message: 'Informe a concessionária.' })
-  distributor!: string;
+  @IsOptional() @IsString()
+  distributor?: string;
 
-  @IsString() @IsNotEmpty({ message: 'Informe a unidade consumidora.' })
-  consumerUnit!: string;
+  @IsOptional() @IsString()
+  consumerUnit?: string;
 
   @IsOptional() @IsString()
   address?: string;

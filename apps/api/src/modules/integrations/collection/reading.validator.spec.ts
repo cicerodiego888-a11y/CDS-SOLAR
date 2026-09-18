@@ -30,8 +30,9 @@ describe('Validação de leituras normalizadas', () => {
     expect(validateNormalizedReading(reading)).toBe(true);
   });
 
-  it('remove apiKey do payload bruto', () => {
+  it('remove apiKey do payload bruto, inclusive aninhado', () => {
     expect(sanitizeRawPayload({ apiKey: 'secret', powerKw: 1 })).toEqual({ powerKw: 1 });
+    expect(sanitizeRawPayload({ data: { apiKey: 'secret', powerKw: 1 } })).toEqual({ data: { powerKw: 1 } });
   });
 
   it('rejeita NaN, Infinity e potência negativa', () => {

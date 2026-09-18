@@ -93,10 +93,11 @@ export function getAlertStatusLabel(status?: string | null): string {
   return ALERT_STATUS_LABELS[status as keyof typeof ALERT_STATUS_LABELS] ?? status;
 }
 
-export function getStatusTone(status?: string | null): 'success' | 'warning' | 'danger' | 'neutral' {
+export function getStatusTone(status?: string | null): 'success' | 'warning' | 'danger' | 'neutral' | 'info' {
   const value = (status || '').toUpperCase();
-  if (value === 'ONLINE' || value === 'ACTIVE' || value === 'RESOLVED' || value === 'HEALTHY' || value === 'SAUDÁVEL') return 'success';
-  if (value === 'WARNING' || value === 'ACKNOWLEDGED' || value === 'PLANNED' || value === 'ATTENTION') return 'warning';
+  if (value === 'ONLINE' || value === 'ACTIVE' || value === 'RESOLVED' || value === 'HEALTHY' || value === 'SAUDÁVEL' || value === 'OPERATIONAL') return 'success';
+  if (value === 'WARNING' || value === 'ACKNOWLEDGED' || value === 'PLANNED' || value === 'ATTENTION' || value === 'PENDING' || value === 'MAINTENANCE') return 'warning';
   if (value === 'ERROR' || value === 'CRITICAL' || value === 'OFFLINE') return 'danger';
+  if (value === 'INFO' || value === 'INFORMATIONAL' || value === 'OPEN') return 'info';
   return 'neutral';
 }

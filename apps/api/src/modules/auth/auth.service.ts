@@ -11,6 +11,7 @@ export class AuthService {
 
   async login(email: string, password: string) {
     const identifier = email.trim();
+    const secret = password.trim();
     const user = await this.prisma.user.findFirst({
       where: {
         OR: [
@@ -19,7 +20,7 @@ export class AuthService {
         ],
       },
     });
-    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+    if (!user || !(await bcrypt.compare(secret, user.passwordHash))) {
       throw new UnauthorizedException('Usuário ou senha inválidos.');
     }
     const publicUser = this.toPublicUser(user);

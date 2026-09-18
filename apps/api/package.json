@@ -10,7 +10,9 @@
     "test": "jest",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:seed": "tsx prisma/seed.ts"
+    "prisma:seed": "tsx prisma/seed.ts",
+    "auxsol:validate": "tsx scripts/auxsol-live-validation.ts",
+    "auxsol:discover": "tsx scripts/auxsol-discovery-validation.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",

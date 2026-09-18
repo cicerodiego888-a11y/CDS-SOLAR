@@ -3,7 +3,9 @@ import {
   auxsolAppId,
   auxsolAppSecret,
   auxsolInverterRealtimeBySnPath,
+  auxsolInvertersByPlantPath,
   auxsolOfficialBaseUrl,
+  auxsolPlantListPath,
   auxsolTimeoutMs,
   integrationLog,
   resolveAuxsolMode,
@@ -107,11 +109,35 @@ export class HttpAuxsolTransport implements AuxsolTransport {
     if (!trimmed) {
       throw new AuxsolInvalidPayloadError('SN inválido para realtime AUXSOL.');
     }
+    return this.authorizedGet(auxsolInverterRealtimeBySnPath(trimmed), 'realtimeBySn');
+  }
 
+  /**
+   * GET /archive/plant/list?current=&size=
+   * Descoberta read-only. Não persiste. Não altera collect.
+   */
+  async listPlants(params: { current?: number; size?: number } = {}): Promise<unknown> {
+    const current = Number.isFinite(params.current) && (params.current ?? 0) > 0 ? Number(params.current) : 1;
+    const size = Number.isFinite(params.size) && (params.size ?? 0) > 0 ? Number(params.size) : 100;
+    return this.authorizedGet(auxsolPlantListPath({ current, size }), 'plantList');
+  }
+
+  /**
+   * GET /archive/inverter/getInverterByPlant/{plantId}
+   * Descoberta read-only. Não persiste. Não altera collect.
+   */
+  async getInvertersByPlant(plantId: string): Promise<unknown> {
+    const trimmed = plantId?.trim();
+    if (!trimmed) {
+      throw new AuxsolInvalidPayloadError('plantId inválido para listagem de inversores AUXSOL.');
+    }
+    return this.authorizedGet(auxsolInvertersByPlantPath(trimmed), 'invertersByPlant');
+  }
+
+  private async authorizedGet(path: string, operation: string): Promise<unknown> {
     const [baseUrl, appId, appSecret] = this.credentials();
     const manager = this.getTokenManager(baseUrl, appId, appSecret);
     const accessToken = await manager.getAccessToken();
-    const path = auxsolInverterRealtimeBySnPath(trimmed);
     const started = Date.now();
 
     try {
@@ -128,25 +154,30 @@ export class HttpAuxsolTransport implements AuxsolTransport {
         throw new AuxsolRequestError(
           typeof response.msg === 'string' && response.msg
             ? response.msg
-            : `Realtime AUXSOL rejeitado (code=${response.code}).`,
+            : `AUXSOL rejeitou ${operation} (code=${response.code}).`,
           response.status,
           response.code,
         );
       }
 
       console.info(integrationLog({
-        operation: 'realtimeBySn',
+        operation,
         endpoint: path,
         status: 'success',
         httpStatus: response.status,
         durationMs: Date.now() - started,
       }));
 
-      // Envelope oficial intacto (code/msg/data) para o normalizer.
+      // Encaminha o JSON AUXSOL completo. Não reconstruir {code,msg,data} —
+      // isso descartaria campos irmãos se a API os enviasse fora de data.
+      const body = response.body && typeof response.body === 'object' && !Array.isArray(response.body)
+        ? response.body as Record<string, unknown>
+        : undefined;
       return {
-        code: response.code ?? AUXSOL_SUCCESS_CODE,
-        msg: response.msg ?? null,
-        data: response.data,
+        ...(body ?? {}),
+        code: (typeof body?.code === 'string' ? body.code : undefined) ?? response.code ?? AUXSOL_SUCCESS_CODE,
+        msg: (body && 'msg' in body ? body.msg : response.msg) ?? null,
+        data: body && 'data' in body ? body.data : response.data,
       };
     } catch (error) {
       if (error instanceof AuxsolAuthError) {
