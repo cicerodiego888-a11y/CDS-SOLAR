@@ -12,8 +12,8 @@ function LoginForm() {
   const { login } = useAuth();
   const searchParams = useSearchParams();
   const expired = searchParams.get('motivo') === 'sessao';
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('Diego');
+  const [password, setPassword] = useState('pdb100623');
   const [error, setError] = useState(expired ? 'Sua sessão expirou. Entre novamente.' : '');
   const [submitting, setSubmitting] = useState(false);
 

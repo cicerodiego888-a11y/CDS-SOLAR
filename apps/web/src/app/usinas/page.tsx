@@ -10,6 +10,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { ErrorMessage } from '../../components/ui/ErrorMessage';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { Modal } from '../../components/ui/Modal';
+import { useDraftModal } from '../../components/ui/useDraftModal';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { SelectField } from '../../components/ui/SelectField';
 import { StatusBadge } from '../../components/ui/StatusBadge';
@@ -41,9 +42,7 @@ function UsinasContent() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Plant | null>(null);
-  const [form, setForm] = useState(emptyForm);
+  const { open, editing, form, setForm, openCreate: startCreate, openEdit: startEdit, close, clearAfterSave } = useDraftModal<typeof emptyForm, Plant>(emptyForm);
   const [formError, setFormError] = useState('');
 
   async function load() {
@@ -72,25 +71,21 @@ function UsinasContent() {
   }, [rows, search, presetCustomer]);
 
   function openCreate() {
-    setEditing(null);
     setFormError('');
-    setForm({ ...emptyForm, customerId: presetCustomer });
-    setOpen(true);
+    startCreate({ customerId: presetCustomer });
   }
 
   function openEdit(row: Plant) {
-    setEditing(row);
     setFormError('');
-    setForm({
-      customerId: row.customerId,
-      name: row.name,
-      installedPowerKw: String(row.installedPowerKw ?? ''),
-      distributor: row.distributor || '',
-      consumerUnit: row.consumerUnit || '',
-      address: row.address || '',
-      status: row.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE',
-    });
-    setOpen(true);
+    startEdit(row, (item) => ({
+      customerId: item.customerId,
+      name: item.name,
+      installedPowerKw: String(item.installedPowerKw ?? ''),
+      distributor: item.distributor || '',
+      consumerUnit: item.consumerUnit || '',
+      address: item.address || '',
+      status: item.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE',
+    }));
   }
 
   async function save() {
@@ -114,18 +109,17 @@ function UsinasContent() {
       distributor: form.distributor.trim() || undefined,
       consumerUnit: form.consumerUnit.trim() || undefined,
       address: form.address.trim() || undefined,
-      status: form.status,
+      ...(editing ? {} : { status: form.status }),
     };
     try {
       setFormError('');
       if (editing) await fetchApi(`/plants/${editing.id}`, { method: 'PATCH', body: JSON.stringify(payload) });
       else await fetchApi('/plants', { method: 'POST', body: JSON.stringify(payload) });
-      setOpen(false);
+      clearAfterSave();
       await load();
     } catch (err) {
       const message = err instanceof ApiError ? err.message : 'Não foi possível salvar a usina.';
       setFormError(message);
-      setError(message);
     }
   }
 
@@ -173,8 +167,7 @@ function UsinasContent() {
           />
         </section>
       ) : null}
-      <Modal open={open} title={editing ? 'Editar usina' : 'Nova usina'} onClose={() => setOpen(false)} onConfirm={() => void save()}>
-        {formError ? <ErrorMessage message={formError} /> : null}
+      <Modal open={open} title={editing ? 'Editar usina' : 'Nova usina'} error={formError} onClose={close} onConfirm={() => void save()}>
         <div className="form-grid">
           <SelectField id="cliente" label="Cliente" value={form.customerId} options={customers.map((item) => ({ value: item.id, label: item.name }))} placeholder="Selecione o cliente" onChange={(customerId) => setForm({ ...form, customerId })} />
           <TextField id="nome-usina" label="Nome da usina" value={form.name} onChange={(name) => setForm({ ...form, name })} />

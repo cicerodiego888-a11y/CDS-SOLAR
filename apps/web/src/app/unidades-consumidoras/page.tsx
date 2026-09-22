@@ -9,6 +9,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { ErrorMessage } from '../../components/ui/ErrorMessage';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { Modal } from '../../components/ui/Modal';
+import { useDraftModal } from '../../components/ui/useDraftModal';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { SelectField } from '../../components/ui/SelectField';
 import { StatusBadge } from '../../components/ui/StatusBadge';
@@ -38,11 +39,10 @@ export default function UnidadesConsumidorasPage() {
   const [consumers, setConsumers] = useState<ConsumerOption[]>([]);
   const [distributors, setDistributors] = useState<DistributorOption[]>([]);
   const [error, setError] = useState('');
+  const [formError, setFormError] = useState('');
   const [search, setSearch] = useState('');
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<ConsumerUnit | null>(null);
-  const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const { open, editing, form, setForm, openCreate, openEdit: startEdit, close, clearAfterSave } = useDraftModal<typeof emptyForm, ConsumerUnit>(emptyForm);
 
   async function load() {
     try {
@@ -79,26 +79,25 @@ export default function UnidadesConsumidorasPage() {
     [distributors],
   );
 
-  function openCreate() {
-    setEditing(null);
-    setForm(emptyForm);
-    setOpen(true);
+  function openNew() {
+    setFormError('');
+    openCreate();
   }
 
   function openEdit(row: ConsumerUnit) {
-    setEditing(row);
-    setForm({
-      consumerId: row.consumerId,
-      distributorId: row.distributorId,
-      number: row.number,
-      address: row.address || '',
-      status: row.status,
-    });
-    setOpen(true);
+    setFormError('');
+    startEdit(row, (item) => ({
+      consumerId: item.consumerId,
+      distributorId: item.distributorId,
+      number: item.number,
+      address: item.address || '',
+      status: item.status,
+    }));
   }
 
   async function save() {
     setSaving(true);
+    setFormError('');
     try {
       if (editing) {
         await fetchApi(`/consumer-units/${editing.id}`, {
@@ -113,10 +112,10 @@ export default function UnidadesConsumidorasPage() {
       } else {
         await fetchApi('/consumer-units', { method: 'POST', body: JSON.stringify(form) });
       }
-      setOpen(false);
+      clearAfterSave();
       await load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Não foi possível salvar a unidade consumidora.');
+      setFormError(err instanceof ApiError ? err.message : 'Não foi possível salvar a unidade consumidora.');
     } finally {
       setSaving(false);
     }
@@ -139,7 +138,7 @@ export default function UnidadesConsumidorasPage() {
             <div className="toolbar-filters">
               <TextField id="busca-uc" label="Buscar" value={search} onChange={setSearch} placeholder="Número, consumidor ou distribuidora" />
             </div>
-            {can(user, 'CONSUMER_UNITS_CREATE') ? <Button onClick={openCreate}>Nova UC</Button> : null}
+            {can(user, 'CONSUMER_UNITS_CREATE') ? <Button onClick={openNew}>Nova UC</Button> : null}
           </div>
           <DataTable
             rows={filtered}
@@ -166,7 +165,7 @@ export default function UnidadesConsumidorasPage() {
         </section>
       ) : null}
 
-      <Modal open={open} title={editing ? 'Editar UC' : 'Nova UC'} onClose={() => setOpen(false)} onConfirm={() => void save()} confirmLabel={saving ? 'Salvando...' : 'Salvar'}>
+      <Modal open={open} title={editing ? 'Editar UC' : 'Nova UC'} error={formError} confirmDisabled={saving} onClose={close} onConfirm={() => void save()} confirmLabel={saving ? 'Salvando...' : 'Salvar'}>
         <div className="form-grid">
           <SelectField id="consumidor" label="Consumidor titular" value={form.consumerId} options={consumerOptions} onChange={(consumerId) => setForm({ ...form, consumerId })} />
           <SelectField id="distribuidora" label="Distribuidora" value={form.distributorId} options={distributorOptions} onChange={(distributorId) => setForm({ ...form, distributorId })} />

@@ -9,6 +9,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { ErrorMessage } from '../../components/ui/ErrorMessage';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { Modal } from '../../components/ui/Modal';
+import { useDraftModal } from '../../components/ui/useDraftModal';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { SelectField } from '../../components/ui/SelectField';
 import { StatusBadge } from '../../components/ui/StatusBadge';
@@ -31,11 +32,10 @@ export default function DistribuidorasPage() {
   const { user } = useAuth();
   const [rows, setRows] = useState<Distributor[] | null>(null);
   const [error, setError] = useState('');
+  const [formError, setFormError] = useState('');
   const [search, setSearch] = useState('');
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Distributor | null>(null);
-  const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const { open, editing, form, setForm, openCreate, openEdit: startEdit, close, clearAfterSave } = useDraftModal<typeof emptyForm, Distributor>(emptyForm);
 
   async function load() {
     try {
@@ -55,20 +55,24 @@ export default function DistribuidorasPage() {
     );
   }, [rows, search]);
 
-  function openCreate() {
-    setEditing(null);
-    setForm(emptyForm);
-    setOpen(true);
+  function openNew() {
+    setFormError('');
+    openCreate();
   }
 
   function openEdit(row: Distributor) {
-    setEditing(row);
-    setForm({ name: row.name, code: row.code, cnpj: row.cnpj || '', status: row.status });
-    setOpen(true);
+    setFormError('');
+    startEdit(row, (item) => ({
+      name: item.name,
+      code: item.code,
+      cnpj: item.cnpj || '',
+      status: item.status,
+    }));
   }
 
   async function save() {
     setSaving(true);
+    setFormError('');
     try {
       if (editing) {
         await fetchApi(`/distributors/${editing.id}`, {
@@ -78,10 +82,10 @@ export default function DistribuidorasPage() {
       } else {
         await fetchApi('/distributors', { method: 'POST', body: JSON.stringify(form) });
       }
-      setOpen(false);
+      clearAfterSave();
       await load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Não foi possível salvar a distribuidora.');
+      setFormError(err instanceof ApiError ? err.message : 'Não foi possível salvar a distribuidora.');
     } finally {
       setSaving(false);
     }
@@ -104,7 +108,7 @@ export default function DistribuidorasPage() {
             <div className="toolbar-filters">
               <TextField id="busca-distribuidora" label="Buscar" value={search} onChange={setSearch} placeholder="Nome, código ou CNPJ" />
             </div>
-            {can(user, 'DISTRIBUTORS_CREATE') ? <Button onClick={openCreate}>Nova distribuidora</Button> : null}
+            {can(user, 'DISTRIBUTORS_CREATE') ? <Button onClick={openNew}>Nova distribuidora</Button> : null}
           </div>
           <DataTable
             rows={filtered}
@@ -131,7 +135,7 @@ export default function DistribuidorasPage() {
         </section>
       ) : null}
 
-      <Modal open={open} title={editing ? 'Editar distribuidora' : 'Nova distribuidora'} onClose={() => setOpen(false)} onConfirm={() => void save()} confirmLabel={saving ? 'Salvando...' : 'Salvar'}>
+      <Modal open={open} title={editing ? 'Editar distribuidora' : 'Nova distribuidora'} error={formError} confirmDisabled={saving} onClose={close} onConfirm={() => void save()} confirmLabel={saving ? 'Salvando...' : 'Salvar'}>
         <div className="form-grid">
           <TextField id="nome" label="Nome" value={form.name} onChange={(name) => setForm({ ...form, name })} />
           <TextField id="codigo" label="Código" value={form.code} onChange={(code) => setForm({ ...form, code })} />

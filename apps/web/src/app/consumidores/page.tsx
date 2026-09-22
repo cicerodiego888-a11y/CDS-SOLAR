@@ -9,6 +9,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { ErrorMessage } from '../../components/ui/ErrorMessage';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { Modal } from '../../components/ui/Modal';
+import { useDraftModal } from '../../components/ui/useDraftModal';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { SelectField } from '../../components/ui/SelectField';
 import { StatusBadge } from '../../components/ui/StatusBadge';
@@ -33,11 +34,10 @@ export default function ConsumidoresPage() {
   const { user } = useAuth();
   const [rows, setRows] = useState<Consumer[] | null>(null);
   const [error, setError] = useState('');
+  const [formError, setFormError] = useState('');
   const [search, setSearch] = useState('');
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Consumer | null>(null);
-  const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const { open, editing, form, setForm, openCreate, openEdit: startEdit, close, clearAfterSave } = useDraftModal<typeof emptyForm, Consumer>(emptyForm);
 
   async function load() {
     try {
@@ -57,27 +57,26 @@ export default function ConsumidoresPage() {
     );
   }, [rows, search]);
 
-  function openCreate() {
-    setEditing(null);
-    setForm(emptyForm);
-    setOpen(true);
+  function openNew() {
+    setFormError('');
+    openCreate();
   }
 
   function openEdit(row: Consumer) {
-    setEditing(row);
-    setForm({
-      name: row.name,
-      document: row.document,
-      documentType: row.documentType,
-      email: row.email || '',
-      phone: row.phone || '',
-      status: row.status,
-    });
-    setOpen(true);
+    setFormError('');
+    startEdit(row, (item) => ({
+      name: item.name,
+      document: item.document,
+      documentType: item.documentType,
+      email: item.email || '',
+      phone: item.phone || '',
+      status: item.status,
+    }));
   }
 
   async function save() {
     setSaving(true);
+    setFormError('');
     try {
       if (editing) {
         await fetchApi(`/consumers/${editing.id}`, {
@@ -93,10 +92,10 @@ export default function ConsumidoresPage() {
       } else {
         await fetchApi('/consumers', { method: 'POST', body: JSON.stringify(form) });
       }
-      setOpen(false);
+      clearAfterSave();
       await load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Não foi possível salvar o consumidor.');
+      setFormError(err instanceof ApiError ? err.message : 'Não foi possível salvar o consumidor.');
     } finally {
       setSaving(false);
     }
@@ -119,7 +118,7 @@ export default function ConsumidoresPage() {
             <div className="toolbar-filters">
               <TextField id="busca-consumidor" label="Buscar" value={search} onChange={setSearch} placeholder="Nome, documento ou e-mail" />
             </div>
-            {can(user, 'CONSUMERS_CREATE') ? <Button onClick={openCreate}>Novo consumidor</Button> : null}
+            {can(user, 'CONSUMERS_CREATE') ? <Button onClick={openNew}>Novo consumidor</Button> : null}
           </div>
           <DataTable
             rows={filtered}
@@ -147,7 +146,7 @@ export default function ConsumidoresPage() {
         </section>
       ) : null}
 
-      <Modal open={open} title={editing ? 'Editar consumidor' : 'Novo consumidor'} onClose={() => setOpen(false)} onConfirm={() => void save()} confirmLabel={saving ? 'Salvando...' : 'Salvar'}>
+      <Modal open={open} title={editing ? 'Editar consumidor' : 'Novo consumidor'} error={formError} confirmDisabled={saving} onClose={close} onConfirm={() => void save()} confirmLabel={saving ? 'Salvando...' : 'Salvar'}>
         <div className="form-grid">
           <TextField id="nome" label="Nome" value={form.name} onChange={(name) => setForm({ ...form, name })} />
           <SelectField id="tipo-doc" label="Tipo de documento" value={form.documentType} options={DOCUMENT_TYPE_OPTIONS} onChange={(documentType) => setForm({ ...form, documentType })} />

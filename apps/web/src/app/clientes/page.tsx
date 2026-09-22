@@ -9,6 +9,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { ErrorMessage } from '../../components/ui/ErrorMessage';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { Modal } from '../../components/ui/Modal';
+import { useDraftModal } from '../../components/ui/useDraftModal';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { SelectField } from '../../components/ui/SelectField';
 import { StatusBadge } from '../../components/ui/StatusBadge';
@@ -32,11 +33,10 @@ export default function ClientesPage() {
   const { user } = useAuth();
   const [rows, setRows] = useState<Customer[] | null>(null);
   const [error, setError] = useState('');
+  const [formError, setFormError] = useState('');
   const [search, setSearch] = useState('');
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Customer | null>(null);
-  const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const { open, editing, form, setForm, openCreate, openEdit: startEdit, close, clearAfterSave } = useDraftModal<typeof emptyForm, Customer>(emptyForm);
 
   async function load() {
     try {
@@ -56,36 +56,42 @@ export default function ClientesPage() {
     );
   }, [rows, search]);
 
-  function openCreate() {
-    setEditing(null);
-    setForm(emptyForm);
-    setOpen(true);
+  function openNew() {
+    setFormError('');
+    openCreate();
   }
 
   function openEdit(row: Customer) {
-    setEditing(row);
-    setForm({
-      name: row.name,
-      document: row.document || '',
-      email: row.email || '',
-      phone: row.phone || '',
-      status: row.status,
-    });
-    setOpen(true);
+    setFormError('');
+    startEdit(row, (item) => ({
+      name: item.name,
+      document: item.document || '',
+      email: item.email || '',
+      phone: item.phone || '',
+      status: item.status,
+    }));
   }
 
   async function save() {
+    const text = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
+    const payload = {
+      name: text(form.name),
+      document: text(form.document),
+      email: text(form.email) || null,
+      phone: text(form.phone) || null,
+    };
     setSaving(true);
+    setFormError('');
     try {
       if (editing) {
-        await fetchApi(`/customers/${editing.id}`, { method: 'PATCH', body: JSON.stringify({ name: form.name, document: form.document, email: form.email, phone: form.phone }) });
+        await fetchApi(`/customers/${editing.id}`, { method: 'PATCH', body: JSON.stringify(payload) });
       } else {
-        await fetchApi('/customers', { method: 'POST', body: JSON.stringify(form) });
+        await fetchApi('/customers', { method: 'POST', body: JSON.stringify({ ...payload, status: form.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE' }) });
       }
-      setOpen(false);
+      clearAfterSave();
       await load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Não foi possível salvar o cliente.');
+      setFormError(err instanceof ApiError ? err.message : 'Não foi possível salvar o cliente.');
     } finally {
       setSaving(false);
     }
@@ -108,7 +114,7 @@ export default function ClientesPage() {
             <div className="toolbar-filters">
               <TextField id="busca-cliente" label="Buscar" value={search} onChange={setSearch} placeholder="Nome, documento ou e-mail" />
             </div>
-            {can(user, 'CUSTOMERS_CREATE') ? <Button onClick={openCreate}>Novo cliente</Button> : null}
+            {can(user, 'CUSTOMERS_CREATE') ? <Button onClick={openNew}>Novo cliente</Button> : null}
           </div>
           <DataTable
             rows={filtered}
@@ -136,7 +142,7 @@ export default function ClientesPage() {
         </section>
       ) : null}
 
-      <Modal open={open} title={editing ? 'Editar cliente' : 'Novo cliente'} onClose={() => setOpen(false)} onConfirm={() => void save()} confirmLabel={saving ? 'Salvando...' : 'Salvar'}>
+      <Modal open={open} title={editing ? 'Editar cliente' : 'Novo cliente'} error={formError} confirmDisabled={saving} onClose={close} onConfirm={() => void save()} confirmLabel={saving ? 'Salvando...' : 'Salvar'}>
         <div className="form-grid">
           <TextField id="nome" label="Nome" value={form.name} onChange={(name) => setForm({ ...form, name })} />
           <TextField id="documento" label="CPF/CNPJ" value={form.document} onChange={(document) => setForm({ ...form, document })} />

@@ -10,6 +10,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { ErrorMessage } from '../../components/ui/ErrorMessage';
 import { LoadingState } from '../../components/ui/LoadingState';
 import { Modal } from '../../components/ui/Modal';
+import { useDraftModal } from '../../components/ui/useDraftModal';
 import { PageHeader } from '../../components/ui/PageHeader';
 import { SelectField } from '../../components/ui/SelectField';
 import { StatusBadge } from '../../components/ui/StatusBadge';
@@ -41,10 +42,9 @@ function EquipamentosContent() {
   const [plants, setPlants] = useState<Plant[]>([]);
   const [inverters, setInverters] = useState<Inverter[]>([]);
   const [error, setError] = useState('');
+  const [formError, setFormError] = useState('');
   const [filters, setFilters] = useState({ plantId: searchParams.get('usina') || '', type: '', status: '' });
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Equipment | null>(null);
-  const [form, setForm] = useState(emptyForm);
+  const { open, editing, form, setForm, openCreate: startCreate, openEdit: startEdit, close, clearAfterSave } = useDraftModal<typeof emptyForm, Equipment>(emptyForm);
 
   async function load() {
     try {
@@ -69,24 +69,22 @@ function EquipamentosContent() {
   useEffect(() => { void load(); }, [filters.plantId, filters.type, filters.status]);
 
   function openCreate() {
-    setEditing(null);
-    setForm({ ...emptyForm, plantId: filters.plantId });
-    setOpen(true);
+    setFormError('');
+    startCreate({ plantId: filters.plantId });
   }
 
   function openEdit(row: Equipment) {
-    setEditing(row);
-    setForm({
-      plantId: row.plantId,
-      type: row.type,
-      manufacturerName: row.manufacturerName || '',
-      model: row.model || '',
-      serialNumber: row.serialNumber,
-      inverterId: row.inverterId || '',
-      notes: row.notes || '',
-      status: row.status,
-    });
-    setOpen(true);
+    setFormError('');
+    startEdit(row, (item) => ({
+      plantId: item.plantId,
+      type: item.type,
+      manufacturerName: item.manufacturerName || '',
+      model: item.model || '',
+      serialNumber: item.serialNumber,
+      inverterId: item.inverterId || '',
+      notes: item.notes || '',
+      status: item.status,
+    }));
   }
 
   async function save() {
@@ -98,15 +96,16 @@ function EquipamentosContent() {
       serialNumber: form.serialNumber,
       inverterId: form.type === 'INVERSOR' ? form.inverterId || undefined : undefined,
       notes: form.notes,
-      status: form.status,
+      ...(editing ? {} : { status: form.status }),
     };
     try {
+      setFormError('');
       if (editing) await fetchApi(`/equipment/${editing.id}`, { method: 'PATCH', body: JSON.stringify(payload) });
       else await fetchApi('/equipment', { method: 'POST', body: JSON.stringify(payload) });
-      setOpen(false);
+      clearAfterSave();
       await load();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Não foi possível salvar o equipamento.');
+      setFormError(err instanceof ApiError ? err.message : 'Não foi possível salvar o equipamento.');
     }
   }
 
@@ -159,7 +158,7 @@ function EquipamentosContent() {
           />
         </section>
       ) : null}
-      <Modal open={open} title={editing ? 'Editar equipamento' : 'Novo equipamento'} onClose={() => setOpen(false)} onConfirm={() => void save()}>
+      <Modal open={open} title={editing ? 'Editar equipamento' : 'Novo equipamento'} error={formError} onClose={close} onConfirm={() => void save()}>
         <div className="form-grid">
           <SelectField id="eq-form-usina" label="Usina" value={form.plantId} options={plants.map((item) => ({ value: item.id, label: item.name }))} placeholder="Selecione a usina" onChange={(plantId) => setForm({ ...form, plantId, inverterId: '' })} />
           <SelectField id="eq-form-tipo" label="Tipo" value={form.type} options={EQUIPMENT_TYPE_OPTIONS} onChange={(type) => setForm({ ...form, type })} />
