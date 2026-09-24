@@ -1,13 +1,36 @@
 /**
- * Descoberta read-only AUXSOL (Sprint 2.2).
- * Extrai somente campos presentes. Não inventa valores. Não persiste.
+ * Descoberta AUXSOL (Sprint 4).
+ * Extrai somente campos presentes. Não inventa valores.
+ * Persistência de binding/leituras é decisão explícita do script de validação.
  */
 
-export const AUXSOL_DISCOVERY_TARGET = {
+/** Alvo José — SN do inversor (não confundir com gateway). */
+export const AUXSOL_DISCOVERY_TARGET_JOSE = {
+  key: 'JOSE',
+  label: 'José',
   sn: 'ASN-10SL2508230101',
   model: 'ASN-10SL',
   gateway: 'A012509010791620',
 } as const;
+
+/** Alvo Ulisses — SN do inversor (não confundir com gateway). */
+export const AUXSOL_DISCOVERY_TARGET_ULISSES = {
+  key: 'ULISSES',
+  label: 'Ulisses',
+  sn: 'ASN-10SL251016000352',
+  /** Modelo esperado na AUXSOL Cloud; B7 pode divergir (ASL-10SL) — não sobrescrever. */
+  model: 'ASN-10SL',
+  gateway: 'A012510191909021',
+  b7ModelHint: 'ASL-10SL',
+} as const;
+
+export const AUXSOL_DISCOVERY_TARGETS = [
+  AUXSOL_DISCOVERY_TARGET_JOSE,
+  AUXSOL_DISCOVERY_TARGET_ULISSES,
+] as const;
+
+/** Compatibilidade: alvo histórico = José. */
+export const AUXSOL_DISCOVERY_TARGET = AUXSOL_DISCOVERY_TARGET_JOSE;
 
 export type AuxsolDiscoveryDiagnosis = 'A' | 'B' | 'C' | 'D';
 
@@ -178,7 +201,7 @@ export function summarizeAuxsolInverter(raw: Record<string, unknown>): AuxsolDis
 
 export function findTargetInverter(
   plants: Array<{ plant: AuxsolDiscoveredPlant; inverters: AuxsolDiscoveredInverter[] }>,
-  targetSn = AUXSOL_DISCOVERY_TARGET.sn,
+  targetSn: string = AUXSOL_DISCOVERY_TARGET.sn,
 ): AuxsolDiscoveryTargetMatch | { found: false; observed: Array<{ sn: string | null; model: unknown }> } {
   for (const entry of plants) {
     for (const inverter of entry.inverters) {
@@ -234,4 +257,178 @@ export function diagnosisLabel(code: AuxsolDiscoveryDiagnosis) {
   if (code === 'B') return 'B) AUTENTICAÇÃO OK + PLANTA ENCONTRADA + INVERSOR NÃO ENCONTRADO';
   if (code === 'C') return 'C) AUTENTICAÇÃO OK + INVERSOR ENCONTRADO + TELEMETRIA NULL';
   return 'D) AUTENTICAÇÃO OK + INVERSOR ENCONTRADO + TELEMETRIA REAL';
+}
+
+export type AuxsolBindingExternalMetaInput = {
+  plantId?: string | number | null;
+  inverterId?: string | number | null;
+  serialNumber?: string | null;
+  model?: unknown;
+  gatewayId?: unknown;
+};
+
+/**
+ * Monta externalMeta somente com campos realmente retornados pela API.
+ * Não inventa plantId/inverterId/serial/model/gateway.
+ * Nunca inclui credenciais.
+ */
+export function buildAuxsolBindingExternalMeta(input: AuxsolBindingExternalMetaInput): Record<string, unknown> | null {
+  const meta: Record<string, unknown> = {
+    provider: 'AUXSOL',
+    resourceType: 'INVERTER',
+  };
+  const plantId = asId(input.plantId ?? null);
+  const inverterId = asId(input.inverterId ?? null);
+  const serialNumber = asText(input.serialNumber ?? null);
+  const model = asText(input.model ?? null);
+  const gatewayId = asText(input.gatewayId ?? null);
+
+  if (plantId !== null) meta.plantId = plantId;
+  if (inverterId !== null) meta.inverterId = inverterId;
+  if (serialNumber) meta.serialNumber = serialNumber;
+  if (model) meta.model = model;
+  if (gatewayId) meta.gatewayId = gatewayId;
+
+  // Sem identidade oficial do recurso → não há meta útil para binding.
+  if (inverterId === null && !serialNumber) return null;
+  return meta;
+}
+
+/**
+ * Identidade primária do recurso Inverter na AUXSOL = inverterId oficial.
+ * Serial fica em externalMeta; nunca promove gateway a externalId.
+ */
+export function resolveAuxsolBindingExternalId(input: {
+  inverterId?: string | number | null;
+}): string | null {
+  const id = asId(input.inverterId ?? null);
+  return id === null ? null : String(id);
+}
+
+export type DiscoveryTargetReport = {
+  customer: string | null;
+  plant: string | null;
+  b7InverterId: string | null;
+  b7EquipmentId: string | null;
+  manufacturer: string | null;
+  provider: 'AUXSOL';
+  providerPlantId: string | number | null;
+  providerInverterId: string | number | null;
+  providerSerial: string | null;
+  providerModel: unknown;
+  providerGatewayId: unknown;
+  targetFound: boolean;
+  bindingCandidate: boolean;
+  modelDivergence?: { b7Model: string; auxsolModel: string } | null;
+};
+
+/**
+ * Preview read-only dos campos confirmados no payload realtime (sem inventar).
+ */
+export function normalizeAuxsolRealtimePreview(payload: unknown): {
+  confirmedFields: string[];
+  missingFields: string[];
+  units: Record<string, string | 'not_confirmed'>;
+} {
+  const envelope = unwrapAuxsolEnvelope(payload);
+  if (!envelope.dataPresent || !isRecord(envelope.data)) {
+    return {
+      confirmedFields: [],
+      missingFields: ['power', 'y', 'ym', 'yt', 'dt', 'sn'],
+      units: {
+        power: 'not_confirmed',
+        y: 'not_confirmed',
+        ym: 'not_confirmed',
+        yt: 'not_confirmed',
+      },
+    };
+  }
+  const data = envelope.data;
+  const energy = isRecord(data.energyData) ? data.energyData : {};
+  const candidates = [
+    'sn', 'dt', 'ratedPower', 'status', 'alarmCurrent', 'communication', 'pId', 'id',
+  ] as const;
+  const energyCandidates = ['power', 'y', 'ym', 'yt'] as const;
+  const confirmedFields: string[] = [];
+  const missingFields: string[] = [];
+  for (const key of candidates) {
+    if (data[key] !== undefined && data[key] !== null && data[key] !== '') confirmedFields.push(key);
+    else missingFields.push(key);
+  }
+  for (const key of energyCandidates) {
+    if (energy[key] !== undefined && energy[key] !== null && energy[key] !== '') {
+      confirmedFields.push(`energyData.${key}`);
+    } else {
+      missingFields.push(`energyData.${key}`);
+    }
+  }
+  // Unidades: contrato AUXSOL documentado (kW / kWh) quando o campo existe; sem unidade no payload.
+  const units: Record<string, string | 'not_confirmed'> = {
+    power: confirmedFields.includes('energyData.power') ? 'kW (contrato AUXSOL)' : 'not_confirmed',
+    y: confirmedFields.includes('energyData.y') ? 'kWh (contrato AUXSOL)' : 'not_confirmed',
+    ym: confirmedFields.includes('energyData.ym') ? 'kWh (contrato AUXSOL)' : 'not_confirmed',
+    yt: confirmedFields.includes('energyData.yt') ? 'kWh (contrato AUXSOL)' : 'not_confirmed',
+  };
+  return { confirmedFields, missingFields, units };
+}
+
+export function buildDiscoveryTargetReport(input: {
+  label: string;
+  match: AuxsolDiscoveryTargetMatch | { found: false; observed: Array<{ sn: string | null; model: unknown }> };
+  b7?: {
+    customerName?: string | null;
+    plantName?: string | null;
+    inverterId?: string | null;
+    equipmentId?: string | null;
+    manufacturer?: string | null;
+    model?: string | null;
+  } | null;
+  b7ModelHint?: string | null;
+}): DiscoveryTargetReport {
+  if (!input.match.found) {
+    return {
+      customer: input.b7?.customerName ?? null,
+      plant: input.b7?.plantName ?? null,
+      b7InverterId: input.b7?.inverterId ?? null,
+      b7EquipmentId: input.b7?.equipmentId ?? null,
+      manufacturer: input.b7?.manufacturer ?? null,
+      provider: 'AUXSOL',
+      providerPlantId: null,
+      providerInverterId: null,
+      providerSerial: null,
+      providerModel: null,
+      providerGatewayId: null,
+      targetFound: false,
+      bindingCandidate: false,
+      modelDivergence: null,
+    };
+  }
+
+  const providerInverterId = input.match.inverterId;
+  const providerSerial = input.match.sn;
+  const bindingCandidate = providerInverterId !== null && providerInverterId !== undefined
+    && Boolean(providerSerial);
+
+  const auxsolModel = asText(input.match.model);
+  const b7Model = input.b7?.model?.trim() || input.b7ModelHint?.trim() || null;
+  const modelDivergence = b7Model && auxsolModel && b7Model !== auxsolModel
+    ? { b7Model, auxsolModel }
+    : null;
+
+  return {
+    customer: input.b7?.customerName ?? null,
+    plant: input.b7?.plantName ?? input.match.plantName,
+    b7InverterId: input.b7?.inverterId ?? null,
+    b7EquipmentId: input.b7?.equipmentId ?? null,
+    manufacturer: input.b7?.manufacturer ?? null,
+    provider: 'AUXSOL',
+    providerPlantId: input.match.plantId,
+    providerInverterId,
+    providerSerial,
+    providerModel: input.match.model,
+    providerGatewayId: input.match.gateway,
+    targetFound: true,
+    bindingCandidate,
+    modelDivergence,
+  };
 }

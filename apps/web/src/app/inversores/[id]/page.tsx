@@ -38,6 +38,13 @@ type Inverter = {
   plant?: { id: string; name: string; customer?: { id: string; name: string } };
   manufacturerRef?: { name: string; code: string } | null;
   bindings?: Binding[];
+  equipment?: Array<{
+    id: string;
+    type: string;
+    serialNumber: string;
+    manufacturerName?: string | null;
+    model?: string | null;
+  }>;
 };
 
 type InverterMonitoring = {
@@ -171,9 +178,31 @@ export default function InversorDetalhePage() {
         <article className="card"><span>Modelo</span><strong>{data.model || '—'}</strong></article>
         <article className="card"><span>Número de série</span><strong>{data.serialNumber || '—'}</strong></article>
         <article className="card"><span>Potência</span><strong>{formatPower(data.ratedPowerKw)}</strong></article>
+        <article className="card"><span>Identificador externo (legado)</span><strong>{data.externalId || '—'}</strong></article>
         <article className="card"><span>Última leitura</span><strong>{monitoring?.latestReading ? formatDateTime(monitoring.latestReading.collectedAt) : (monitoring?.emptyReadingMessage || 'Sem dados de monitoramento.')}</strong></article>
         <article className="card"><span>Potência atual</span><strong>{monitoring?.latestReading ? formatPower(monitoring.latestReading.powerKw) : '—'}</strong></article>
         <article className="card"><span>Geração no período</span><strong>{formatEnergyKwh(monitoring?.history.energyKwh ?? null, Boolean(monitoring?.history.hasData))}</strong></article>
+      </section>
+
+      <section className="panel" style={{ marginTop: 18 }}>
+        <div className="panel-title">
+          <div>
+            <h2>Gateway / Datalogger associados</h2>
+            <p>Equipamentos auxiliares vinculados a este inversor. O serial do gateway não é o serial do inversor.</p>
+          </div>
+          <Link href={`/equipamentos?usina=${data.plant?.id || ''}`}><Button variant="secondary">Ver equipamentos</Button></Link>
+        </div>
+        <DataTable
+          rows={data.equipment ?? []}
+          rowKey={(row) => row.id}
+          columns={[
+            { key: 'type', header: 'Tipo', render: (row) => row.type },
+            { key: 'serial', header: 'Número de série', render: (row) => row.serialNumber },
+            { key: 'manufacturer', header: 'Fabricante', render: (row) => row.manufacturerName || '—' },
+            { key: 'model', header: 'Modelo', render: (row) => row.model || '—' },
+          ]}
+          empty={<EmptyState title="Nenhum gateway/datalogger associado" description="Cadastre o equipamento e associe-o a este inversor." />}
+        />
       </section>
 
       <section className="panel">

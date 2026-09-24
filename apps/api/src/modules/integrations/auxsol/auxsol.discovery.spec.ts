@@ -1,8 +1,13 @@
 import {
   AUXSOL_DISCOVERY_TARGET,
+  AUXSOL_DISCOVERY_TARGET_ULISSES,
+  buildAuxsolBindingExternalMeta,
+  buildDiscoveryTargetReport,
   classifyAuxsolDiscovery,
   extractAuxsolListItems,
   findTargetInverter,
+  normalizeAuxsolRealtimePreview,
+  resolveAuxsolBindingExternalId,
   summarizeAuxsolInverters,
   summarizeAuxsolPlantPage,
   summarizeAuxsolRealtime,
@@ -104,10 +109,62 @@ describe('AUXSOL discovery (read-only, sem HTTP real)', () => {
     }
   });
 
+  it('localiza Ulisses por SN sem usar gateway como inversor', () => {
+    const plants = [{
+      plant: { plantId: 'plant-u', plantName: 'Ulisses', owner: null, capacity: null, status: null, address: null },
+      inverters: [{
+        inverterId: 'inv-u',
+        sn: AUXSOL_DISCOVERY_TARGET_ULISSES.sn,
+        model: 'ASN-10SL',
+        ratedPower: 10,
+        gateway: AUXSOL_DISCOVERY_TARGET_ULISSES.gateway,
+        identifiers: { sn: AUXSOL_DISCOVERY_TARGET_ULISSES.sn, collectorSn: AUXSOL_DISCOVERY_TARGET_ULISSES.gateway },
+      }],
+    }];
+    const match = findTargetInverter(plants, AUXSOL_DISCOVERY_TARGET_ULISSES.sn);
+    expect(match.found).toBe(true);
+    if (match.found) {
+      expect(match.inverterId).toBe('inv-u');
+      expect(match.gateway).toBe(AUXSOL_DISCOVERY_TARGET_ULISSES.gateway);
+      expect(match.sn).not.toBe(AUXSOL_DISCOVERY_TARGET_ULISSES.gateway);
+    }
+    const report = buildDiscoveryTargetReport({
+      label: 'Ulisses',
+      match,
+      b7: { model: 'ASL-10SL', inverterId: 'b7-i', manufacturer: 'AUXSOL' },
+      b7ModelHint: 'ASL-10SL',
+    });
+    expect(report.targetFound).toBe(true);
+    expect(report.bindingCandidate).toBe(true);
+    expect(report.modelDivergence).toEqual({ b7Model: 'ASL-10SL', auxsolModel: 'ASN-10SL' });
+  });
+
+  it('monta externalMeta/externalId só com IDs oficiais', () => {
+    expect(resolveAuxsolBindingExternalId({ inverterId: 'inv-1' })).toBe('inv-1');
+    expect(resolveAuxsolBindingExternalId({ inverterId: null })).toBeNull();
+    expect(buildAuxsolBindingExternalMeta({
+      plantId: 'p1',
+      inverterId: 'inv-1',
+      serialNumber: AUXSOL_DISCOVERY_TARGET.sn,
+      model: 'ASN-10SL',
+      gatewayId: AUXSOL_DISCOVERY_TARGET.gateway,
+    })).toEqual({
+      provider: 'AUXSOL',
+      resourceType: 'INVERTER',
+      plantId: 'p1',
+      inverterId: 'inv-1',
+      serialNumber: AUXSOL_DISCOVERY_TARGET.sn,
+      model: 'ASN-10SL',
+      gatewayId: AUXSOL_DISCOVERY_TARGET.gateway,
+    });
+    expect(buildAuxsolBindingExternalMeta({ inverterId: null, serialNumber: null })).toBeNull();
+  });
+
   it('realtime com data=null não é telemetria real', () => {
     const realtime = summarizeAuxsolRealtime({ code: 'AWX-0000', msg: null, data: null });
     expect(realtime.dataKind).toBe('null');
     expect(realtime.dataPresent).toBe(false);
+    expect(normalizeAuxsolRealtimePreview({ code: 'AWX-0000', data: null }).confirmedFields).toEqual([]);
     expect(classifyAuxsolDiscovery({
       plantCount: 1,
       targetFound: true,
@@ -120,11 +177,19 @@ describe('AUXSOL discovery (read-only, sem HTTP real)', () => {
     const realtime = summarizeAuxsolRealtime({
       code: 'AWX-0000',
       msg: null,
-      data: { sn: AUXSOL_DISCOVERY_TARGET.sn, dt: '2026-09-18 12:00:00', energyData: { power: 1.2 } },
+      data: { sn: AUXSOL_DISCOVERY_TARGET.sn, dt: '2026-09-18 12:00:00', energyData: { power: 1.2, y: 3, ym: 40, yt: 500 } },
     });
     expect(realtime.dataKind).toBe('object');
     expect(realtime.dataPresent).toBe(true);
     expect(realtime.dataKeys).toEqual(expect.arrayContaining(['sn', 'dt', 'energyData']));
+    const preview = normalizeAuxsolRealtimePreview({
+      code: 'AWX-0000',
+      data: { sn: AUXSOL_DISCOVERY_TARGET.sn, dt: '2026-09-18 12:00:00', energyData: { power: 1.2, y: 3, ym: 40, yt: 500 } },
+    });
+    expect(preview.confirmedFields).toEqual(expect.arrayContaining([
+      'sn', 'dt', 'energyData.power', 'energyData.y', 'energyData.ym', 'energyData.yt',
+    ]));
+    expect(preview.units.power).toContain('kW');
     expect(classifyAuxsolDiscovery({
       plantCount: 1,
       targetFound: true,

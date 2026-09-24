@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateEquipmentDto, StatusDto, UpdateEquipmentDto } from '../common/dto';
+import { isInverterLinkableEquipmentType } from '../integrations/integration-binding.identity';
 
 const include = { plant: { include: { customer: true } }, inverter: true };
 
@@ -8,12 +9,13 @@ const include = { plant: { include: { customer: true } }, inverter: true };
 export class EquipmentService {
   constructor(private prisma: PrismaService) {}
 
-  findAll(filters?: { plantId?: string; type?: string; status?: string }) {
+  findAll(filters?: { plantId?: string; type?: string; status?: string; inverterId?: string }) {
     return this.prisma.equipment.findMany({
       where: {
         ...(filters?.plantId ? { plantId: filters.plantId } : {}),
         ...(filters?.type ? { type: filters.type as never } : {}),
         ...(filters?.status ? { status: filters.status as never } : {}),
+        ...(filters?.inverterId ? { inverterId: filters.inverterId } : {}),
       },
       include,
       orderBy: { createdAt: 'desc' },
@@ -28,12 +30,13 @@ export class EquipmentService {
 
   async create(dto: CreateEquipmentDto) {
     await this.assertPlant(dto.plantId);
-    await this.assertInverter(dto.plantId, dto.inverterId, dto.type);
+    const inverterId = this.resolveInverterId(dto.type, dto.inverterId);
+    await this.assertInverter(dto.plantId, inverterId, dto.type);
     await this.assertSerial(dto.plantId, dto.serialNumber);
     return this.prisma.equipment.create({
       data: {
         plantId: dto.plantId,
-        inverterId: dto.type === 'INVERSOR' ? dto.inverterId || null : null,
+        inverterId,
         type: dto.type,
         manufacturerName: dto.manufacturerName?.trim() || null,
         model: dto.model?.trim() || null,
@@ -50,7 +53,11 @@ export class EquipmentService {
     const plantId = dto.plantId ?? current.plantId;
     const type = dto.type ?? current.type;
     if (dto.plantId) await this.assertPlant(dto.plantId);
-    await this.assertInverter(plantId, dto.inverterId ?? current.inverterId, type);
+    const inverterId = this.resolveInverterId(
+      type,
+      dto.inverterId !== undefined ? dto.inverterId : current.inverterId,
+    );
+    await this.assertInverter(plantId, inverterId, type);
     if (dto.serialNumber || dto.plantId) {
       await this.assertSerial(plantId, dto.serialNumber ?? current.serialNumber, id);
     }
@@ -59,7 +66,7 @@ export class EquipmentService {
       data: {
         ...(dto.plantId ? { plantId: dto.plantId } : {}),
         ...(dto.type ? { type: dto.type } : {}),
-        inverterId: type === 'INVERSOR' ? (dto.inverterId ?? current.inverterId) : null,
+        inverterId,
         ...(dto.manufacturerName !== undefined ? { manufacturerName: dto.manufacturerName?.trim() || null } : {}),
         ...(dto.model !== undefined ? { model: dto.model?.trim() || null } : {}),
         ...(dto.serialNumber ? { serialNumber: dto.serialNumber.trim() } : {}),
@@ -74,13 +81,22 @@ export class EquipmentService {
     return this.prisma.equipment.update({ where: { id }, data: { status: dto.status }, include });
   }
 
+  private resolveInverterId(type: string, inverterId: string | null | undefined) {
+    if (!isInverterLinkableEquipmentType(type)) return null;
+    const value = inverterId?.trim();
+    return value || null;
+  }
+
   private async assertPlant(plantId: string) {
     const plant = await this.prisma.plant.findUnique({ where: { id: plantId } });
     if (!plant) throw new NotFoundException('Usina não encontrada.');
   }
 
   private async assertInverter(plantId: string, inverterId: string | null | undefined, type: string) {
-    if (type !== 'INVERSOR' || !inverterId) return;
+    if (!inverterId) return;
+    if (!isInverterLinkableEquipmentType(type)) {
+      throw new BadRequestException('Este tipo de equipamento não pode ser associado a um inversor.');
+    }
     const inverter = await this.prisma.inverter.findUnique({ where: { id: inverterId } });
     if (!inverter) throw new NotFoundException('Inversor não encontrado.');
     if (inverter.plantId !== plantId) {
@@ -89,8 +105,10 @@ export class EquipmentService {
   }
 
   private async assertSerial(plantId: string, serialNumber: string, ignoreId?: string) {
+    const serial = serialNumber.trim();
+    if (!serial) throw new BadRequestException('Informe o número de série do equipamento.');
     const existing = await this.prisma.equipment.findFirst({
-      where: { plantId, serialNumber: serialNumber.trim(), ...(ignoreId ? { NOT: { id: ignoreId } } : {}) },
+      where: { plantId, serialNumber: serial, ...(ignoreId ? { NOT: { id: ignoreId } } : {}) },
     });
     if (existing) throw new ConflictException('Já existe um equipamento com este número de série nesta usina.');
   }

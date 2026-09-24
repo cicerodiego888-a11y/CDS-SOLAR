@@ -31,6 +31,7 @@ type Equipment = {
   plantId: string;
   inverterId?: string | null;
   plant?: { name: string };
+  inverter?: { id: string; model?: string | null; serialNumber?: string | null } | null;
 };
 
 const emptyForm = { plantId: '', type: 'OUTRO', manufacturerName: '', model: '', serialNumber: '', inverterId: '', notes: '', status: 'ACTIVE' };
@@ -88,13 +89,14 @@ function EquipamentosContent() {
   }
 
   async function save() {
+    const linkable = form.type === 'GATEWAY' || form.type === 'DATALOGGER' || form.type === 'INVERSOR';
     const payload = {
       plantId: form.plantId,
       type: form.type,
       manufacturerName: form.manufacturerName,
       model: form.model,
       serialNumber: form.serialNumber,
-      inverterId: form.type === 'INVERSOR' ? form.inverterId || undefined : undefined,
+      inverterId: linkable ? (form.inverterId || null) : null,
       notes: form.notes,
       ...(editing ? {} : { status: form.status }),
     };
@@ -116,6 +118,7 @@ function EquipamentosContent() {
   }
 
   const plantInverters = inverters.filter((item) => item.plantId === form.plantId);
+  const showInverterLink = form.type === 'GATEWAY' || form.type === 'DATALOGGER' || form.type === 'INVERSOR';
 
   return (
     <div className="shell">
@@ -142,6 +145,13 @@ function EquipamentosContent() {
               { key: 'manufacturer', header: 'Fabricante', render: (row) => row.manufacturerName || '—' },
               { key: 'model', header: 'Modelo', render: (row) => row.model || '—' },
               { key: 'serial', header: 'Número de série', render: (row) => row.serialNumber },
+              {
+                key: 'inverter',
+                header: 'Inversor associado',
+                render: (row) => row.inverterId
+                  ? <Link href={`/inversores/${row.inverterId}`}>{row.inverter?.serialNumber || row.inverter?.model || 'Ver inversor'}</Link>
+                  : '—',
+              },
               { key: 'status', header: 'Status', render: (row) => <StatusBadge label={recordStatusLabel(row.status)} status={row.status} /> },
               {
                 key: 'actions',
@@ -161,14 +171,17 @@ function EquipamentosContent() {
       <Modal open={open} title={editing ? 'Editar equipamento' : 'Novo equipamento'} error={formError} onClose={close} onConfirm={() => void save()}>
         <div className="form-grid">
           <SelectField id="eq-form-usina" label="Usina" value={form.plantId} options={plants.map((item) => ({ value: item.id, label: item.name }))} placeholder="Selecione a usina" onChange={(plantId) => setForm({ ...form, plantId, inverterId: '' })} />
-          <SelectField id="eq-form-tipo" label="Tipo" value={form.type} options={EQUIPMENT_TYPE_OPTIONS} onChange={(type) => setForm({ ...form, type })} />
-          {form.type === 'INVERSOR' ? (
+          <SelectField id="eq-form-tipo" label="Tipo" value={form.type} options={EQUIPMENT_TYPE_OPTIONS} onChange={(type) => setForm({ ...form, type, inverterId: type === 'GATEWAY' || type === 'DATALOGGER' || type === 'INVERSOR' ? form.inverterId : '' })} />
+          {showInverterLink ? (
             <SelectField
               id="eq-form-inv"
-              label="Inversor vinculado"
+              label="Equipamento associado ao inversor"
               value={form.inverterId}
-              options={plantInverters.map((item) => ({ value: item.id, label: item.model || item.serialNumber || item.id }))}
-              placeholder="Selecione o inversor"
+              options={plantInverters.map((item) => ({
+                value: item.id,
+                label: [item.serialNumber, item.model].filter(Boolean).join(' · ') || item.id,
+              }))}
+              placeholder="Opcional — selecione o inversor"
               onChange={(inverterId) => setForm({ ...form, inverterId })}
             />
           ) : null}

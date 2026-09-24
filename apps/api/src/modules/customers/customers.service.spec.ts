@@ -30,6 +30,7 @@ describe('CustomersService', () => {
     prisma.customer.create.mockResolvedValue({ id: 'c1', name: 'Cliente A', document: '123' });
     const created = await service.create({ name: 'Cliente A', document: '123' });
     expect(created.id).toBe('c1');
+    expect(prisma.customer.create.mock.calls[0][0].data.consumerId).toBeUndefined();
   });
 
   it('rejeita documento duplicado', async () => {
@@ -54,6 +55,22 @@ describe('CustomersService', () => {
     expect(() => {
       if (!hasPermission('OPERADOR', 'CUSTOMERS_CREATE')) throw new ForbiddenException('Acesso negado');
     }).toThrow(ForbiddenException);
+  });
+
+  it('cliente existente sem consumidor continua funcionando', async () => {
+    prisma.customer.findUnique.mockResolvedValue({
+      id: 'c1',
+      name: 'Antigo',
+      document: '00000000000100',
+      consumerId: null,
+    });
+    await expect(service.findOne('c1')).resolves.toMatchObject({ id: 'c1', name: 'Antigo', consumerId: null });
+    prisma.customer.update.mockResolvedValue({ id: 'c1', phone: '88999990000' });
+    await expect(service.update('c1', { phone: '88999990000' })).resolves.toMatchObject({ id: 'c1' });
+    expect(prisma.customer.update).toHaveBeenCalledWith({
+      where: { id: 'c1' },
+      data: { phone: '88999990000' },
+    });
   });
 
   it('falha ao buscar cliente inexistente', async () => {

@@ -13,8 +13,9 @@ export class EquipmentController {
     @Query('plantId') plantId?: string,
     @Query('type') type?: string,
     @Query('status') status?: string,
+    @Query('inverterId') inverterId?: string,
   ) {
-    return this.service.findAll({ plantId, type, status });
+    return this.service.findAll({ plantId, type, status, inverterId });
   }
 
   @Permissions('EQUIPMENT_VIEW')

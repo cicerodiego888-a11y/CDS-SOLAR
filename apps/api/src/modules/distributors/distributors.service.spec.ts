@@ -57,6 +57,16 @@ describe('DistributorsService', () => {
     await expect(service.updateStatus('d1', { status: 'INACTIVE' })).resolves.toMatchObject({ status: 'INACTIVE' });
   });
 
+  it('9. não duplica Distributor pelo código', async () => {
+    prisma.distributor.findUnique.mockResolvedValue({ id: 'other', code: 'ENEL' });
+    await expect(service.create({ name: 'X', code: 'ENEL' })).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('8. consulta Distributor existente', async () => {
+    prisma.distributor.findUnique.mockResolvedValue({ id: 'd1', name: 'Equatorial' });
+    await expect(service.findOne('d1')).resolves.toMatchObject({ id: 'd1', name: 'Equatorial' });
+  });
+
   it('rejeita código duplicado', async () => {
     prisma.distributor.findUnique.mockResolvedValue({ id: 'other', code: 'ENEL' });
     await expect(service.create({ name: 'X', code: 'ENEL' })).rejects.toBeInstanceOf(ConflictException);

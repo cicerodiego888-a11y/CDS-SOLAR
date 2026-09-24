@@ -5,6 +5,7 @@ type Props = {
   placeholder?: string;
   type?: string;
   error?: string;
+  hint?: string;
   disabled?: boolean;
   onChange?: (value: string) => void;
 };
@@ -16,6 +17,7 @@ export function TextField({
   placeholder,
   type = 'text',
   error,
+  hint,
   disabled,
   onChange,
 }: Props) {
@@ -29,9 +31,10 @@ export function TextField({
         placeholder={placeholder}
         disabled={disabled}
         aria-invalid={Boolean(error)}
-        aria-describedby={error ? `${id}-error` : undefined}
+        aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined}
         onChange={(event) => onChange?.(event.target.value)}
       />
+      {hint && !error ? <span className="ui-field-hint" id={`${id}-hint`}>{hint}</span> : null}
       {error ? <span className="ui-field-error" id={`${id}-error`}>{error}</span> : null}
     </label>
   );

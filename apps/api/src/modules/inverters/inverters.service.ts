@@ -1,15 +1,21 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { EquipmentType } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateInverterDto, StatusDto, UpdateInverterDto } from '../common/dto';
 
 const inverterInclude = {
   plant: { include: { customer: true } },
   manufacturerRef: true,
+  equipment: {
+    where: { type: { in: [EquipmentType.GATEWAY, EquipmentType.DATALOGGER] } },
+    orderBy: { createdAt: 'desc' as const },
+  },
   bindings: {
     select: {
       id: true,
       provider: true,
       externalId: true,
+      externalMeta: true,
       status: true,
       lastSyncAt: true,
       lastErrorAt: true,
@@ -106,8 +112,10 @@ export class InvertersService {
   }
 
   private async assertSerial(plantId: string, serialNumber: string, ignoreId?: string) {
+    const serial = serialNumber.trim();
+    if (!serial) throw new BadRequestException('Informe o número de série do inversor.');
     const existing = await this.prisma.inverter.findFirst({
-      where: { plantId, serialNumber: serialNumber.trim(), ...(ignoreId ? { NOT: { id: ignoreId } } : {}) },
+      where: { plantId, serialNumber: serial, ...(ignoreId ? { NOT: { id: ignoreId } } : {}) },
     });
     if (existing) throw new ConflictException('Já existe um inversor com este número de série nesta usina.');
   }

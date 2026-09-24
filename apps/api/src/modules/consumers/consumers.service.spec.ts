@@ -27,13 +27,13 @@ describe('ConsumersService', () => {
 
   it('cria consumidor', async () => {
     prisma.consumer.findUnique.mockResolvedValue(null);
-    prisma.consumer.create.mockResolvedValue({ id: 'c1', name: 'João', document: '123' });
-    const created = await service.create({ name: 'João', document: '123', documentType: 'CPF' });
+    prisma.consumer.create.mockResolvedValue({ id: 'c1', name: 'João', document: '52998224725' });
+    const created = await service.create({ name: 'João', document: '529.982.247-25', documentType: 'CPF' });
     expect(created.id).toBe('c1');
     expect(prisma.consumer.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         name: 'João',
-        document: '123',
+        document: '52998224725',
         documentType: 'CPF',
         status: 'ACTIVE',
       }),
@@ -63,8 +63,8 @@ describe('ConsumersService', () => {
   });
 
   it('rejeita documento duplicado', async () => {
-    prisma.consumer.findUnique.mockResolvedValue({ id: 'other', document: '123' });
-    await expect(service.create({ name: 'X', document: '123', documentType: 'CPF' }))
+    prisma.consumer.findUnique.mockResolvedValue({ id: 'other', document: '52998224725' });
+    await expect(service.create({ name: 'X', document: '529.982.247-25', documentType: 'CPF' }))
       .rejects.toBeInstanceOf(ConflictException);
   });
 
@@ -75,8 +75,8 @@ describe('ConsumersService', () => {
 
   it('permite Consumer sem Customer e sem User (payload não exige vínculo)', async () => {
     prisma.consumer.findUnique.mockResolvedValue(null);
-    prisma.consumer.create.mockResolvedValue({ id: 'c1', name: 'Independente', document: '999' });
-    const created = await service.create({ name: 'Independente', document: '999', documentType: 'CNPJ' });
+    prisma.consumer.create.mockResolvedValue({ id: 'c1', name: 'Independente', document: '11222333000181' });
+    const created = await service.create({ name: 'Independente', document: '11.222.333/0001-81', documentType: 'CNPJ' });
     const data = prisma.consumer.create.mock.calls[0][0].data;
     expect(data.customerId).toBeUndefined();
     expect(data.userId).toBeUndefined();

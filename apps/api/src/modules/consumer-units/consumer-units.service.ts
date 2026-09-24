@@ -1,5 +1,6 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
+import { assertUtilityNumber, normalizeUtilityNumber, optionalContractAccount } from '../common/utility-number';
 import { CreateConsumerUnitDto, StatusDto, UpdateConsumerUnitDto } from '../common/dto';
 
 const include = {
@@ -17,7 +18,7 @@ export class ConsumerUnitsService {
     consumerId?: string;
     status?: string;
   }) {
-    const number = filters?.number?.trim();
+    const number = normalizeUtilityNumber(filters?.number) || filters?.number?.trim();
     return this.prisma.consumerUnit.findMany({
       where: {
         ...(number ? { number: { contains: number } } : {}),
@@ -39,12 +40,15 @@ export class ConsumerUnitsService {
   async create(dto: CreateConsumerUnitDto) {
     await this.assertConsumer(dto.consumerId);
     await this.assertDistributor(dto.distributorId);
-    await this.assertUniqueNumber(dto.distributorId, dto.number);
+    const number = assertUtilityNumber(dto.number, 'o número da unidade consumidora');
+    const contractAccount = optionalContractAccount(dto.contractAccount);
+    await this.assertUniqueNumber(dto.distributorId, number);
     return this.prisma.consumerUnit.create({
       data: {
         consumerId: dto.consumerId,
         distributorId: dto.distributorId,
-        number: dto.number.trim(),
+        number,
+        ...(contractAccount !== undefined ? { contractAccount } : {}),
         address: dto.address?.trim() || null,
         status: dto.status ?? 'ACTIVE',
       },
@@ -56,7 +60,12 @@ export class ConsumerUnitsService {
     const current = await this.findOne(id);
     const consumerId = dto.consumerId ?? current.consumerId;
     const distributorId = dto.distributorId ?? current.distributorId;
-    const number = dto.number?.trim() ?? current.number;
+    const number = dto.number !== undefined
+      ? assertUtilityNumber(dto.number, 'o número da unidade consumidora')
+      : current.number;
+    const contractAccount = dto.contractAccount !== undefined
+      ? optionalContractAccount(dto.contractAccount)
+      : undefined;
 
     if (dto.consumerId) await this.assertConsumer(dto.consumerId);
     if (dto.distributorId) await this.assertDistributor(dto.distributorId);
@@ -70,6 +79,7 @@ export class ConsumerUnitsService {
         ...(dto.consumerId ? { consumerId } : {}),
         ...(dto.distributorId ? { distributorId } : {}),
         ...(dto.number ? { number } : {}),
+        ...(contractAccount !== undefined ? { contractAccount } : {}),
         ...(dto.address !== undefined ? { address: dto.address?.trim() || null } : {}),
       },
       include,
@@ -100,7 +110,7 @@ export class ConsumerUnitsService {
       where: {
         distributorId_number: {
           distributorId,
-          number: number.trim(),
+          number,
         },
       },
     });

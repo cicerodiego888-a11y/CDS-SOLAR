@@ -399,6 +399,7 @@ h3 { font-size: var(--text-h3); font-weight: 650; }
 .ui-field input:disabled, .ui-field select:disabled, .ui-field textarea:disabled { opacity: .55; }
 .ui-field.is-error input, .ui-field.is-error select, .ui-field.is-error textarea { border-color: var(--danger); }
 .ui-field-error { color: #fca5a5; font-weight: 600; }
+.ui-field-hint { color: var(--muted); font-size: 12px; font-weight: 500; }
 .ui-check, .ui-radio { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text-secondary); }
 
 .ui-table-wrap { overflow-x: auto; margin-top: 16px; }
@@ -556,6 +557,20 @@ h3 { font-size: var(--text-h3); font-weight: 650; }
 @media (max-width: 600px) { .detail-grid { grid-template-columns: 1fr; } }
 .form-grid { display: grid; gap: 14px; }
 .actions-cell { display: flex; gap: 6px; flex-wrap: wrap; }
+.panel.panel-compact { min-height: 0; }
+.energy-summary { display: grid; gap: 10px; margin-top: 16px; }
+.energy-form { display: grid; gap: 14px; margin-top: 16px; }
+.energy-units { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+.energy-units h3 { margin: 0 0 4px; }
+.energy-unit-grid { display: grid; gap: 14px; margin-top: 14px; }
+.energy-unit-card {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(7, 17, 29, 0.35);
+  display: grid;
+  gap: 14px;
+}
 
 .auth-loading { min-height: 100vh; display: grid; place-items: center; background: var(--bg); }
 .login-page {

@@ -20,6 +20,7 @@ import { can, RECORD_STATUS_OPTIONS, recordStatusLabel } from '../../lib/operati
 type ConsumerUnit = {
   id: string;
   number: string;
+  contractAccount?: string | null;
   address?: string | null;
   status: string;
   consumerId: string;
@@ -31,7 +32,7 @@ type ConsumerUnit = {
 type ConsumerOption = { id: string; name: string; status: string };
 type DistributorOption = { id: string; name: string; code: string; status: string };
 
-const emptyForm = { consumerId: '', distributorId: '', number: '', address: '', status: 'ACTIVE' };
+const emptyForm = { consumerId: '', distributorId: '', number: '', contractAccount: '', address: '', status: 'ACTIVE' };
 
 export default function UnidadesConsumidorasPage() {
   const { user } = useAuth();
@@ -90,6 +91,7 @@ export default function UnidadesConsumidorasPage() {
       consumerId: item.consumerId,
       distributorId: item.distributorId,
       number: item.number,
+      contractAccount: item.contractAccount || '',
       address: item.address || '',
       status: item.status,
     }));
@@ -106,6 +108,7 @@ export default function UnidadesConsumidorasPage() {
             consumerId: form.consumerId,
             distributorId: form.distributorId,
             number: form.number,
+            contractAccount: form.contractAccount || null,
             address: form.address,
           }),
         });
@@ -145,6 +148,7 @@ export default function UnidadesConsumidorasPage() {
             rowKey={(row) => row.id}
             columns={[
               { key: 'number', header: 'Número da UC', render: (row) => <Link href={`/unidades-consumidoras/${row.id}`}>{row.number}</Link> },
+              { key: 'contract', header: 'Conta contrato', render: (row) => row.contractAccount || '—' },
               { key: 'consumer', header: 'Consumidor', render: (row) => row.consumer ? <Link href={`/consumidores/${row.consumer.id}`}>{row.consumer.name}</Link> : '—' },
               { key: 'distributor', header: 'Distribuidora', render: (row) => row.distributor ? <Link href={`/distribuidoras/${row.distributor.id}`}>{row.distributor.name}</Link> : '—' },
               { key: 'address', header: 'Endereço', render: (row) => row.address || '—' },
@@ -170,6 +174,7 @@ export default function UnidadesConsumidorasPage() {
           <SelectField id="consumidor" label="Consumidor titular" value={form.consumerId} options={consumerOptions} onChange={(consumerId) => setForm({ ...form, consumerId })} />
           <SelectField id="distribuidora" label="Distribuidora" value={form.distributorId} options={distributorOptions} onChange={(distributorId) => setForm({ ...form, distributorId })} />
           <TextField id="numero" label="Número da UC" value={form.number} onChange={(number) => setForm({ ...form, number })} />
+          <TextField id="conta-contrato" label="Conta contrato" value={form.contractAccount} onChange={(contractAccount) => setForm({ ...form, contractAccount })} />
           <TextField id="endereco" label="Endereço" value={form.address} onChange={(address) => setForm({ ...form, address })} />
           {!editing ? <SelectField id="status" label="Status" value={form.status} options={RECORD_STATUS_OPTIONS} onChange={(status) => setForm({ ...form, status })} /> : null}
         </div>

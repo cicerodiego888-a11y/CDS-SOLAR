@@ -1,4 +1,4 @@
-import { IsEmail, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, Min, MinLength } from 'class-validator';
+import { IsEmail, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, Min, MinLength, ValidateIf } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export const RECORD_STATUSES = ['ACTIVE', 'INACTIVE'] as const;
@@ -37,6 +37,45 @@ export class UpdateCustomerDto {
   phone?: string;
 }
 
+export class CreateCustomerConsumerDto {
+  @IsOptional() @IsString() @IsNotEmpty({ message: 'Informe o consumidor existente.' })
+  consumerId?: string;
+
+  @IsOptional() @IsString() @IsNotEmpty({ message: 'Informe o nome do titular.' })
+  name?: string;
+
+  @IsOptional() @IsString()
+  document?: string;
+
+  @IsOptional() @IsIn(DOCUMENT_TYPES, { message: 'Tipo de documento inválido.' })
+  documentType?: (typeof DOCUMENT_TYPES)[number];
+
+  @ValidateIf((dto: CreateCustomerConsumerDto) => typeof dto.email === 'string' && dto.email.trim() !== '')
+  @IsEmail({}, { message: 'Informe um e-mail válido.' })
+  email?: string | null;
+
+  @IsOptional() @IsString()
+  phone?: string;
+}
+
+export class UpdateCustomerConsumerDto {
+  @IsOptional() @IsString() @IsNotEmpty({ message: 'Informe o nome do titular.' })
+  name?: string;
+
+  @IsOptional() @IsString()
+  document?: string;
+
+  @IsOptional() @IsIn(DOCUMENT_TYPES, { message: 'Tipo de documento inválido.' })
+  documentType?: (typeof DOCUMENT_TYPES)[number];
+
+  @ValidateIf((dto: UpdateCustomerConsumerDto) => typeof dto.email === 'string' && dto.email.trim() !== '')
+  @IsEmail({}, { message: 'Informe um e-mail válido.' })
+  email?: string | null;
+
+  @IsOptional() @IsString()
+  phone?: string;
+}
+
 export class StatusDto {
   @IsIn(RECORD_STATUSES, { message: 'Status inválido.' })
   status!: 'ACTIVE' | 'INACTIVE';
@@ -57,6 +96,9 @@ export class CreatePlantDto {
 
   @IsOptional() @IsString()
   consumerUnit?: string;
+
+  @IsOptional() @IsString()
+  consumerUnitId?: string;
 
   @IsOptional() @IsString()
   address?: string;
@@ -82,7 +124,32 @@ export class UpdatePlantDto {
   consumerUnit?: string;
 
   @IsOptional() @IsString()
+  consumerUnitId?: string | null;
+
+  @IsOptional() @IsString()
   address?: string;
+}
+
+export class LinkPlantConsumerUnitDto {
+  @IsString() @IsNotEmpty({ message: 'Selecione a unidade consumidora.' })
+  consumerUnitId!: string;
+}
+
+export class CreateCustomerConsumerUnitDto {
+  @IsString() @IsNotEmpty({ message: 'Selecione a distribuidora.' })
+  distributorId!: string;
+
+  @IsString() @IsNotEmpty({ message: 'Informe o número da unidade consumidora.' })
+  number!: string;
+
+  @IsOptional() @IsString()
+  contractAccount?: string;
+
+  @IsOptional() @IsString()
+  address?: string;
+
+  @IsOptional() @IsIn(RECORD_STATUSES, { message: 'Status inválido.' })
+  status?: 'ACTIVE' | 'INACTIVE';
 }
 
 export class PlantStatusDto {
@@ -170,7 +237,7 @@ export class UpdateEquipmentDto {
   serialNumber?: string;
 
   @IsOptional() @IsString()
-  inverterId?: string;
+  inverterId?: string | null;
 
   @IsOptional() @IsString()
   manufacturerName?: string;
@@ -255,6 +322,9 @@ export class CreateConsumerUnitDto {
   number!: string;
 
   @IsOptional() @IsString()
+  contractAccount?: string;
+
+  @IsOptional() @IsString()
   address?: string;
 
   @IsOptional() @IsIn(RECORD_STATUSES, { message: 'Status inválido.' })
@@ -270,6 +340,9 @@ export class UpdateConsumerUnitDto {
 
   @IsOptional() @IsString() @IsNotEmpty({ message: 'Informe o número da unidade consumidora.' })
   number?: string;
+
+  @IsOptional() @IsString()
+  contractAccount?: string | null;
 
   @IsOptional() @IsString()
   address?: string;

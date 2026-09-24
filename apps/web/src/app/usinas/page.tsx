@@ -16,9 +16,22 @@ import { SelectField } from '../../components/ui/SelectField';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { TextField } from '../../components/ui/TextField';
 import { ApiError, fetchApi } from '../../lib/api';
+import {
+  applyPlantUnitSelection,
+  consumerUnitLabel,
+  plantConsumerUnitDisplay,
+  plantDistributorDisplay,
+} from '../../lib/consumer-units';
 import { can, formatPower, parsePowerKw, PLANT_STATUS_OPTIONS, plantOperationalLabel } from '../../lib/operational';
 
 type Customer = { id: string; name: string };
+type ConsumerUnitOption = {
+  id: string;
+  number: string;
+  contractAccount?: string | null;
+  status: string;
+  distributor?: { id: string; name: string; code?: string } | null;
+};
 type Plant = {
   id: string;
   name: string;
@@ -27,12 +40,28 @@ type Plant = {
   installedPowerKw?: string | number | null;
   distributor?: string | null;
   consumerUnit?: string | null;
+  consumerUnitId?: string | null;
+  consumerUnitRef?: {
+    id: string;
+    number: string;
+    contractAccount?: string | null;
+    distributor?: { id: string; name: string } | null;
+  } | null;
   address?: string | null;
   status: string;
   _count?: { inverters: number; equipment: number };
 };
 
-const emptyForm = { customerId: '', name: '', installedPowerKw: '', distributor: '', consumerUnit: '', address: '', status: 'ACTIVE' };
+const emptyForm = {
+  customerId: '',
+  name: '',
+  installedPowerKw: '',
+  distributor: '',
+  consumerUnit: '',
+  consumerUnitId: '',
+  address: '',
+  status: 'ACTIVE',
+};
 
 function UsinasContent() {
   const { user } = useAuth();
@@ -40,10 +69,21 @@ function UsinasContent() {
   const presetCustomer = searchParams.get('cliente') || '';
   const [rows, setRows] = useState<Plant[] | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [unitsByCustomer, setUnitsByCustomer] = useState<Record<string, ConsumerUnitOption[]>>({});
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const { open, editing, form, setForm, openCreate: startCreate, openEdit: startEdit, close, clearAfterSave } = useDraftModal<typeof emptyForm, Plant>(emptyForm);
   const [formError, setFormError] = useState('');
+
+  async function loadUnitsForCustomer(customerId: string) {
+    if (!customerId || unitsByCustomer[customerId]) return;
+    try {
+      const units = await fetchApi<ConsumerUnitOption[]>(`/customers/${customerId}/consumer-units`);
+      setUnitsByCustomer((current) => ({ ...current, [customerId]: units }));
+    } catch {
+      setUnitsByCustomer((current) => ({ ...current, [customerId]: [] }));
+    }
+  }
 
   async function load() {
     try {
@@ -61,14 +101,26 @@ function UsinasContent() {
 
   useEffect(() => { void load(); }, []);
 
+  useEffect(() => {
+    if (form.customerId) void loadUnitsForCustomer(form.customerId);
+  }, [form.customerId]);
+
   const filtered = useMemo(() => {
     const term = search.toLowerCase();
     return (rows || []).filter((row) => {
       const matchesCustomer = !presetCustomer || row.customerId === presetCustomer;
-      const matchesSearch = [row.name, row.customer?.name, row.distributor, row.consumerUnit].some((value) => value?.toLowerCase().includes(term));
+      const matchesSearch = [
+        row.name,
+        row.customer?.name,
+        plantDistributorDisplay(row),
+        plantConsumerUnitDisplay(row),
+      ].some((value) => value?.toLowerCase().includes(term));
       return matchesCustomer && matchesSearch;
     });
   }, [rows, search, presetCustomer]);
+
+  const availableUnits = unitsByCustomer[form.customerId] || [];
+  const hasEnergyUnits = availableUnits.length > 0;
 
   function openCreate() {
     setFormError('');
@@ -81,11 +133,36 @@ function UsinasContent() {
       customerId: item.customerId,
       name: item.name,
       installedPowerKw: String(item.installedPowerKw ?? ''),
-      distributor: item.distributor || '',
-      consumerUnit: item.consumerUnit || '',
+      distributor: item.consumerUnitRef?.distributor?.name || item.distributor || '',
+      consumerUnit: item.consumerUnitRef?.number || item.consumerUnit || '',
+      consumerUnitId: item.consumerUnitId || item.consumerUnitRef?.id || '',
       address: item.address || '',
       status: item.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE',
     }));
+  }
+
+  function changeCustomer(customerId: string) {
+    setForm({
+      ...form,
+      customerId,
+      consumerUnitId: '',
+      distributor: '',
+      consumerUnit: '',
+    });
+  }
+
+  function changeUnit(consumerUnitId: string) {
+    const unit = availableUnits.find((item) => item.id === consumerUnitId) || null;
+    const next = applyPlantUnitSelection(
+      {
+        customerId: form.customerId,
+        consumerUnitId: form.consumerUnitId,
+        distributor: form.distributor,
+        consumerUnit: form.consumerUnit,
+      },
+      unit,
+    );
+    setForm({ ...form, ...next });
   }
 
   async function save() {
@@ -106,10 +183,16 @@ function UsinasContent() {
       customerId: form.customerId,
       name: form.name.trim(),
       installedPowerKw,
-      distributor: form.distributor.trim() || undefined,
-      consumerUnit: form.consumerUnit.trim() || undefined,
       address: form.address.trim() || undefined,
       ...(editing ? {} : { status: form.status }),
+      ...(hasEnergyUnits
+        ? {
+            consumerUnitId: form.consumerUnitId || null,
+          }
+        : {
+            distributor: form.distributor.trim() || undefined,
+            consumerUnit: form.consumerUnit.trim() || undefined,
+          }),
     };
     try {
       setFormError('');
@@ -147,8 +230,8 @@ function UsinasContent() {
               { key: 'name', header: 'Nome da usina', render: (row) => <Link href={`/usinas/${row.id}`}>{row.name}</Link> },
               { key: 'customer', header: 'Cliente', render: (row) => row.customer?.name || '—' },
               { key: 'power', header: 'Potência instalada', render: (row) => formatPower(row.installedPowerKw) },
-              { key: 'distributor', header: 'Concessionária', render: (row) => row.distributor || '—' },
-              { key: 'uc', header: 'Unidade consumidora', render: (row) => row.consumerUnit || '—' },
+              { key: 'distributor', header: 'Concessionária', render: (row) => plantDistributorDisplay(row) },
+              { key: 'uc', header: 'Unidade consumidora', render: (row) => plantConsumerUnitDisplay(row) },
               { key: 'inverters', header: 'Inversores', render: (row) => row._count?.inverters ?? 0 },
               { key: 'equipment', header: 'Equipamentos', render: (row) => row._count?.equipment ?? 0 },
               { key: 'status', header: 'Status', render: (row) => <StatusBadge label={plantOperationalLabel(row.status)} status={row.status} /> },
@@ -169,11 +252,34 @@ function UsinasContent() {
       ) : null}
       <Modal open={open} title={editing ? 'Editar usina' : 'Nova usina'} error={formError} onClose={close} onConfirm={() => void save()}>
         <div className="form-grid">
-          <SelectField id="cliente" label="Cliente" value={form.customerId} options={customers.map((item) => ({ value: item.id, label: item.name }))} placeholder="Selecione o cliente" onChange={(customerId) => setForm({ ...form, customerId })} />
+          <SelectField
+            id="cliente"
+            label="Cliente"
+            value={form.customerId}
+            options={customers.map((item) => ({ value: item.id, label: item.name }))}
+            placeholder="Selecione o cliente"
+            onChange={changeCustomer}
+          />
+          {hasEnergyUnits ? (
+            <>
+              <SelectField
+                id="uc-vinculo"
+                label="Unidade consumidora"
+                value={form.consumerUnitId}
+                options={availableUnits.map((unit) => ({ value: unit.id, label: consumerUnitLabel(unit) }))}
+                placeholder="Selecione a unidade consumidora"
+                onChange={changeUnit}
+              />
+              <TextField id="concessionaria" label="Distribuidora" value={form.distributor} disabled onChange={() => undefined} />
+            </>
+          ) : (
+            <>
+              <TextField id="concessionaria" label="Concessionária" value={form.distributor} onChange={(distributor) => setForm({ ...form, distributor })} />
+              <TextField id="uc" label="Unidade consumidora" value={form.consumerUnit} onChange={(consumerUnit) => setForm({ ...form, consumerUnit })} />
+            </>
+          )}
           <TextField id="nome-usina" label="Nome da usina" value={form.name} onChange={(name) => setForm({ ...form, name })} />
           <TextField id="potencia" label="Potência instalada (kW)" value={form.installedPowerKw} onChange={(installedPowerKw) => setForm({ ...form, installedPowerKw })} />
-          <TextField id="concessionaria" label="Concessionária" value={form.distributor} onChange={(distributor) => setForm({ ...form, distributor })} />
-          <TextField id="uc" label="Unidade consumidora" value={form.consumerUnit} onChange={(consumerUnit) => setForm({ ...form, consumerUnit })} />
           <TextField id="endereco" label="Endereço" value={form.address} onChange={(address) => setForm({ ...form, address })} />
           {!editing ? <SelectField id="status-usina" label="Status" value={form.status} options={PLANT_STATUS_OPTIONS} onChange={(status) => setForm({ ...form, status })} /> : null}
         </div>

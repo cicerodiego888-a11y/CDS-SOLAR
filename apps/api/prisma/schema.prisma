@@ -77,6 +77,9 @@ model Customer {
   city        String?
   state       String?
   status      RecordStatus @default(ACTIVE)
+  /// Cadastro energético opcional. Nulo em clientes já existentes.
+  consumerId  String?      @unique
+  consumer    Consumer?    @relation(fields: [consumerId], references: [id], onDelete: SetNull)
   users       User[]
   plants      Plant[]
   memberships UserMembership[]
@@ -116,8 +119,12 @@ model Plant {
   customer        Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
   status          PlantStatus  @default(ACTIVE)
   installedPowerKw Decimal?
+  /// Campos legados (texto). Preservados durante a transição para ConsumerUnit.
   distributor     String?
   consumerUnit    String?
+  /// Vínculo formal opcional com a Unidade Consumidora do domínio energético.
+  consumerUnitId  String?
+  consumerUnitRef ConsumerUnit? @relation(fields: [consumerUnitId], references: [id], onDelete: SetNull)
   address         String?
   latitude        Decimal?
   longitude       Decimal?
@@ -131,6 +138,7 @@ model Plant {
 
   @@index([customerId])
   @@index([status])
+  @@index([consumerUnitId])
 }
 
 model Inverter {
@@ -139,10 +147,13 @@ model Inverter {
   plant          Plant                @relation(fields: [plantId], references: [id], onDelete: Cascade)
   manufacturerId String?
   manufacturerRef InverterManufacturer? @relation(fields: [manufacturerId], references: [id])
+  /// Código legado do fabricante (texto). Preferir manufacturerId/catálogo.
   manufacturer   String
   model          String?
+  /// Serial físico do inversor (≠ serial de gateway/datalogger).
   serialNumber   String?
   ratedPowerKw   Decimal?
+  /// Campo legado/opcional. Identidade oficial de integração fica em IntegrationBinding.externalId.
   externalId     String?
   status         String?              @default("ACTIVE")
   readings       MonitoringReading[]
@@ -257,11 +268,13 @@ model Equipment {
   id               String        @id @default(cuid())
   plantId          String
   plant            Plant         @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  /// Vínculo opcional ao inversor (ex.: GATEWAY/DATALOGGER auxiliar). Não transforma gateway em inversor.
   inverterId       String?
   inverter         Inverter?     @relation(fields: [inverterId], references: [id], onDelete: SetNull)
   type             EquipmentType
   manufacturerName String?
   model            String?
+  /// Serial físico do equipamento (≠ serial do inversor).
   serialNumber     String
   status           RecordStatus  @default(ACTIVE)
   notes            String?
@@ -298,10 +311,16 @@ model IntegrationBinding {
   provider         String
   manufacturerId   String?
   manufacturer     InverterManufacturer?     @relation(fields: [manufacturerId], references: [id])
+  /// Entidade principal monitorada (Inverter). Gateway/Datalogger permanece em Equipment.
   inverterId       String
   inverter         Inverter                  @relation(fields: [inverterId], references: [id], onDelete: Cascade)
+  /// Identidade externa principal do recurso no fabricante (genérica; não é serial físico).
   externalId       String?
+  /// Metadados externos genéricos do adapter (ex.: plantId/deviceId/gatewayId do fabricante).
+  /// Sem campos específicos por fabricante no domínio central.
+  externalMeta     Json?
   status           IntegrationBindingStatus  @default(NOT_CONFIGURED)
+  /// Referência a segredo externo — nunca o valor do secret/token.
   secretRef        String?
   lastSyncAt       DateTime?
   lastErrorAt      DateTime?
@@ -343,6 +362,7 @@ model Consumer {
   phone         String?
   status        RecordStatus   @default(ACTIVE)
   consumerUnits ConsumerUnit[]
+  customer      Customer?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -352,17 +372,20 @@ model Consumer {
 
 /// Unidade Consumidora (UC). Independente de Plant; Rateio virá em sprint futura.
 model ConsumerUnit {
-  id            String       @id @default(cuid())
-  consumerId    String
-  consumer      Consumer     @relation(fields: [consumerId], references: [id])
-  distributorId String
-  distributor   Distributor  @relation(fields: [distributorId], references: [id])
-  /// Número/código da UC no contexto da distribuidora (≠ cliente/instalação/medidor).
-  number        String
-  address       String?
-  status        RecordStatus @default(ACTIVE)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id              String       @id @default(cuid())
+  consumerId      String
+  consumer        Consumer     @relation(fields: [consumerId], references: [id])
+  distributorId   String
+  distributor     Distributor  @relation(fields: [distributorId], references: [id])
+  /// Número/código da UC no contexto da distribuidora (≠ Conta Contrato).
+  number          String
+  /// Conta Contrato — distinta do número da UC; opcional quando ainda não confirmada.
+  contractAccount String?
+  address         String?
+  status          RecordStatus @default(ACTIVE)
+  plants          Plant[]
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
   @@unique([distributorId, number])
   @@index([consumerId])

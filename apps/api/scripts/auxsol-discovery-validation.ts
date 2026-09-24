@@ -1,12 +1,18 @@
 /**
- * Descoberta REAL one-shot da AUXSOL (Sprint 2.2).
+ * Descoberta REAL one-shot da AUXSOL (Sprint 4).
  * Reutiliza HttpAuxsolTransport + TokenManager existentes.
- * Não persiste, não cria binding, não altera o normalizer.
+ * Não inventa IDs. Não trata gateway como inversor.
+ * Binding só quando TARGET_FOUND + inverterId oficial + match B7 por serial.
+ * Leituras NÃO são persistidas (AUXSOL_PERSIST_READINGS deve permanecer false).
  * Não imprime APP_SECRET nem access_token.
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { stripSensitiveObject } from '../src/modules/integrations/security.redact';
+import {
+  assertBindingPayloadHasNoSecrets,
+} from '../src/modules/integrations/integration-binding.identity';
 import {
   auxsolAppId,
   auxsolAppSecret,
@@ -16,15 +22,20 @@ import {
 } from '../src/modules/integrations/auxsol/auxsol.config';
 import { AuxsolClient } from '../src/modules/integrations/auxsol/auxsol.client';
 import {
-  AUXSOL_DISCOVERY_TARGET,
+  AUXSOL_DISCOVERY_TARGETS,
+  buildAuxsolBindingExternalMeta,
+  buildDiscoveryTargetReport,
   classifyAuxsolDiscovery,
   diagnosisLabel,
   findTargetInverter,
+  normalizeAuxsolRealtimePreview,
+  resolveAuxsolBindingExternalId,
   summarizeAuxsolInverters,
   summarizeAuxsolPlantPage,
   summarizeAuxsolRealtime,
   type AuxsolDiscoveredInverter,
   type AuxsolDiscoveredPlant,
+  type DiscoveryTargetReport,
 } from '../src/modules/integrations/auxsol/auxsol.discovery';
 import {
   AuxsolAuthError,
@@ -33,6 +44,7 @@ import {
   AuxsolRequestError,
   AuxsolTransientError,
 } from '../src/modules/integrations/auxsol/auxsol.errors';
+import { normalizeAuxsolRealtime } from '../src/modules/integrations/auxsol/auxsol.normalizer';
 import { HttpAuxsolTransport } from '../src/modules/integrations/auxsol/auxsol.transport';
 
 const PAGE_SIZE = 100;
@@ -88,12 +100,120 @@ function classifyError(error: unknown): {
   return { type: 'unknown', message: 'erro desconhecido' };
 }
 
+async function lookupB7BySerial(prisma: PrismaClient, sn: string, gateway?: string) {
+  const inverter = await prisma.inverter.findFirst({
+    where: { serialNumber: sn },
+    include: {
+      plant: { include: { customer: true } },
+      manufacturerRef: true,
+      equipment: {
+        where: gateway
+          ? { OR: [{ serialNumber: gateway }, { type: { in: ['GATEWAY', 'DATALOGGER'] } }] }
+          : { type: { in: ['GATEWAY', 'DATALOGGER'] } },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      },
+    },
+  });
+  if (!inverter) return null;
+  const equipment = gateway
+    ? inverter.equipment.find((item) => item.serialNumber === gateway) ?? inverter.equipment[0] ?? null
+    : inverter.equipment[0] ?? null;
+  return {
+    customerName: inverter.plant.customer?.name ?? null,
+    plantName: inverter.plant.name,
+    inverterId: inverter.id,
+    equipmentId: equipment?.id ?? null,
+    manufacturer: inverter.manufacturerRef?.code ?? inverter.manufacturer ?? null,
+    model: inverter.model,
+  };
+}
+
+type BindingUpsertResult = {
+  created: boolean;
+  updated: boolean;
+  bindingCreated: boolean;
+  reason?: string;
+  bindingId?: string;
+  externalId?: string | null;
+  externalMeta?: unknown;
+  targetKey?: string;
+};
+
+async function upsertBindingIfEligible(prisma: PrismaClient, input: {
+  report: DiscoveryTargetReport;
+  targetKey: string;
+}): Promise<BindingUpsertResult> {
+  if (!input.report.targetFound || !input.report.bindingCandidate) {
+    return { created: false, updated: false, bindingCreated: false, reason: 'TARGET_NOT_FOUND_OR_NO_IDS' };
+  }
+  if (!input.report.b7InverterId) {
+    return { created: false, updated: false, bindingCreated: false, reason: 'B7_INVERTER_NOT_MATCHED' };
+  }
+  const externalId = resolveAuxsolBindingExternalId({
+    inverterId: input.report.providerInverterId,
+  });
+  if (!externalId) {
+    return { created: false, updated: false, bindingCreated: false, reason: 'PROVIDER_INVERTER_ID_ABSENT' };
+  }
+  const externalMeta = buildAuxsolBindingExternalMeta({
+    plantId: input.report.providerPlantId,
+    inverterId: input.report.providerInverterId,
+    serialNumber: input.report.providerSerial,
+    model: input.report.providerModel,
+    gatewayId: input.report.providerGatewayId,
+  });
+  if (!externalMeta || !assertBindingPayloadHasNoSecrets(externalMeta)) {
+    return { created: false, updated: false, bindingCreated: false, reason: 'EXTERNAL_META_INVALID' };
+  }
+
+  const existing = await prisma.integrationBinding.findUnique({
+    where: {
+      inverterId_provider: {
+        inverterId: input.report.b7InverterId,
+        provider: 'AUXSOL',
+      },
+    },
+  });
+
+  const binding = existing
+    ? await prisma.integrationBinding.update({
+      where: { id: existing.id },
+      data: {
+        externalId,
+        externalMeta: externalMeta as Prisma.InputJsonValue,
+        status: 'READY',
+        lastErrorAt: null,
+        lastErrorMessage: null,
+      },
+    })
+    : await prisma.integrationBinding.create({
+      data: {
+        provider: 'AUXSOL',
+        inverterId: input.report.b7InverterId,
+        externalId,
+        externalMeta: externalMeta as Prisma.InputJsonValue,
+        status: 'READY',
+      },
+    });
+
+  return {
+    created: !existing,
+    updated: Boolean(existing),
+    bindingCreated: true,
+    bindingId: binding.id,
+    externalId: binding.externalId,
+    externalMeta: binding.externalMeta,
+    targetKey: input.targetKey,
+  };
+}
+
 async function main() {
   loadLocalEnv();
 
   const report: Record<string, unknown> = {
-    sprint: 'AUXSOL 2.2 — DISCOVERY',
-    persistence: { executed: false },
+    sprint: 'SPRINT 4 — AUXSOL REAL',
+    persistence: { executed: false, reason: 'AUXSOL_PERSIST_READINGS=false (somente payload real válido autorizaria)' },
     migration: { created: false },
     mock: process.env.AUXSOL_MOCK_MODE === 'true' ? 'ON' : 'OFF',
     persist: process.env.AUXSOL_PERSIST_READINGS === 'true' ? 'ON' : 'OFF',
@@ -101,19 +221,19 @@ async function main() {
     appIdConfigured: Boolean(auxsolAppId()),
     appSecretConfiguredViaEnv: Boolean(auxsolAppSecret()),
     mode: resolveAuxsolMode(),
-    target: {
-      sn: AUXSOL_DISCOVERY_TARGET.sn,
-      model: AUXSOL_DISCOVERY_TARGET.model,
-      gateway: AUXSOL_DISCOVERY_TARGET.gateway,
-      found: false,
-    },
+    targets: AUXSOL_DISCOVERY_TARGETS.map((t) => ({
+      key: t.key,
+      sn: t.sn,
+      model: t.model,
+      gateway: t.gateway,
+    })),
   };
 
   if (process.env.AUXSOL_PERSIST_READINGS === 'true') {
     console.error(JSON.stringify({
       ...report,
       status: 'DESCOBERTA BLOQUEADA',
-      reason: 'AUXSOL_PERSIST_READINGS deve permanecer false nesta descoberta.',
+      reason: 'AUXSOL_PERSIST_READINGS deve permanecer false nesta descoberta (persistência seletiva só após payload real validado).',
     }, null, 2));
     process.exitCode = 2;
     return;
@@ -153,6 +273,8 @@ async function main() {
     originalError(...args);
   }) as typeof console.error;
 
+  const prisma = new PrismaClient();
+
   try {
     const transport = new HttpAuxsolTransport();
     const client = new AuxsolClient(transport);
@@ -161,8 +283,10 @@ async function main() {
     const authLog = [...capturedLogs].reverse().find((item) => item.operation === 'auth' && item.status === 'success');
     report.authentication = {
       result: 'OK',
+      status: 'AUTHENTICATED',
       httpStatus: authLog?.httpStatus ?? null,
       auxsolCode: authLog?.auxsolCode ?? null,
+      expiresIn: authLog?.expiresIn ?? null,
       mode: 'live',
     };
 
@@ -211,38 +335,48 @@ async function main() {
       });
     }
 
-    const match = findTargetInverter(inventory);
     report.plants = {
       result: 'OK',
+      status: 'DISCOVERY_OK',
       httpStatus: plantHttpStatus,
       auxsolCode: plantCode,
       count: plants.length,
       items: plants,
     };
     report.inverters = plantInverters;
-    report.target = {
-      sn: AUXSOL_DISCOVERY_TARGET.sn,
-      model: AUXSOL_DISCOVERY_TARGET.model,
-      gateway: AUXSOL_DISCOVERY_TARGET.gateway,
-      found: match.found,
-      ...(match.found
-        ? {
-          plantId: match.plantId,
-          plantName: match.plantName,
-          inverterId: match.inverterId,
-          inverterSn: match.sn,
-          inverterModel: match.model,
-          inverterGateway: match.gateway,
-          identifiers: match.identifiers,
-        }
-        : {
-          observed: match.observed,
-        }),
-    };
 
-    let realtimeQueried = false;
-    let dataPresent = false;
-    if (match.found) {
+    const discoveryResults: Record<string, DiscoveryTargetReport> = {};
+    const realtimeByTarget: Record<string, unknown> = {};
+    const normalizationByTarget: Record<string, unknown> = {};
+    const bindingByTarget: Record<string, unknown> = {};
+    let anyTargetFound = false;
+    let anyRealtimeData = false;
+
+    for (const target of AUXSOL_DISCOVERY_TARGETS) {
+      const match = findTargetInverter(inventory, target.sn);
+      const b7 = await lookupB7BySerial(prisma, target.sn, target.gateway).catch(() => null);
+      const targetReport = buildDiscoveryTargetReport({
+        label: target.label,
+        match,
+        b7,
+        b7ModelHint: 'b7ModelHint' in target ? target.b7ModelHint : null,
+      });
+      discoveryResults[target.key] = targetReport;
+      anyTargetFound = anyTargetFound || targetReport.targetFound;
+
+      if (!match.found) {
+        realtimeByTarget[target.key] = {
+          result: 'SKIPPED',
+          status: 'TARGET_NOT_FOUND',
+          note: 'Realtime só é consultado quando o SN alvo aparece na listagem AUXSOL.',
+        };
+        bindingByTarget[target.key] = {
+          bindingCreated: false,
+          reason: 'TARGET_NOT_FOUND',
+        };
+        continue;
+      }
+
       const payload = await transport.getInverterRealtimeBySn(match.sn);
       const sanitized = stripSensitiveObject(payload);
       const summary = summarizeAuxsolRealtime(payload);
@@ -251,56 +385,123 @@ async function main() {
         && typeof item.endpoint === 'string'
         && String(item.endpoint).includes('findInverterRealTimeInfoBySn')
       ));
-      realtimeQueried = true;
-      dataPresent = summary.dataPresent;
-      report.realtime = {
+      anyRealtimeData = anyRealtimeData || summary.dataPresent;
+      realtimeByTarget[target.key] = {
         result: 'OK',
+        status: summary.dataPresent ? 'REALTIME_OK' : 'TARGET_FOUND',
         httpStatus: httpLog?.httpStatus ?? null,
         auxsolCode: summary.auxsolCode ?? httpLog?.auxsolCode ?? null,
         dataKind: summary.dataKind,
-        dataPresent,
+        dataPresent: summary.dataPresent,
         payloadKeys: summary.payloadKeys,
         dataKeys: summary.dataKeys,
         comparisonWithPrevious: {
           previous: { auxsolCode: 'AWX-0000', dataKind: 'null', dataPresent: false },
-          current: { auxsolCode: summary.auxsolCode, dataKind: summary.dataKind, dataPresent },
-          sameNullTelemetry: !dataPresent && summary.dataKind === 'null',
+          current: { auxsolCode: summary.auxsolCode, dataKind: summary.dataKind, dataPresent: summary.dataPresent },
+          sameNullTelemetry: !summary.dataPresent && summary.dataKind === 'null',
         },
         sanitizedPayload: sanitized,
       };
-    } else {
-      report.realtime = {
-        result: 'SKIPPED',
-        note: 'Realtime só é consultado quando o SN alvo aparece na listagem AUXSOL.',
+
+      try {
+        const normalized = normalizeAuxsolRealtime(payload, { serialNumber: match.sn });
+        normalizationByTarget[target.key] = {
+          status: normalized.length ? 'NORMALIZED' : 'EMPTY_PAYLOAD',
+          readings: normalized.length,
+          confirmedFields: summary.dataPresent
+            ? normalizeAuxsolRealtimePreview(payload)
+            : { note: 'data=null → sem campos de telemetria' },
+        };
+      } catch (error) {
+        normalizationByTarget[target.key] = {
+          status: 'NORMALIZER_ERROR',
+          message: error instanceof Error ? error.message : 'unknown',
+        };
+      }
+
+      // Binding somente com IDs oficiais; não persiste leitura vazia.
+      const bindingResult = await upsertBindingIfEligible(prisma, {
+        report: targetReport,
+        targetKey: target.key,
+      });
+      bindingByTarget[target.key] = {
+        ...bindingResult,
+        preparedExternalId: resolveAuxsolBindingExternalId({
+          inverterId: targetReport.providerInverterId,
+        }),
+        preparedExternalMeta: buildAuxsolBindingExternalMeta({
+          plantId: targetReport.providerPlantId,
+          inverterId: targetReport.providerInverterId,
+          serialNumber: targetReport.providerSerial,
+          model: targetReport.providerModel,
+          gatewayId: targetReport.providerGatewayId,
+        }),
       };
     }
+
+    report.discoveryResults = discoveryResults;
+    report.realtime = realtimeByTarget;
+    report.normalization = normalizationByTarget;
+    report.binding = bindingByTarget;
+
+    const bindingCount = await prisma.integrationBinding.count({ where: { provider: 'AUXSOL' } });
+    report.bindingSummary = { auxsolBindings: bindingCount };
+
+    const primaryMatch = findTargetInverter(inventory);
+    const diagnosis = classifyAuxsolDiscovery({
+      plantCount: plants.length,
+      targetFound: anyTargetFound,
+      realtimeQueried: anyTargetFound,
+      dataPresent: anyRealtimeData,
+    });
+    report.FINAL_STATUS = diagnosisLabel(diagnosis);
+    report.stages = [
+      'AUTHENTICATED',
+      'DISCOVERY_OK',
+      ...(anyTargetFound ? ['TARGET_FOUND'] : ['TARGET_NOT_FOUND']),
+      ...(anyRealtimeData ? ['REALTIME_OK'] : []),
+    ];
+    report.note = anyRealtimeData
+      ? 'Telemetria presente em pelo menos um alvo. Persistência de leituras NÃO executada (flag off).'
+      : 'Integração de coleta NÃO concluída. Descoberta/binding conforme targets; sem telemetria real persistível.';
+
+    // Compat: bloco target José (histórico)
+    const jose = discoveryResults.JOSE;
+    report.target = jose
+      ? {
+        sn: AUXSOL_DISCOVERY_TARGETS[0].sn,
+        model: AUXSOL_DISCOVERY_TARGETS[0].model,
+        gateway: AUXSOL_DISCOVERY_TARGETS[0].gateway,
+        found: jose.targetFound,
+        plantId: jose.providerPlantId,
+        inverterId: jose.providerInverterId,
+        inverterSn: jose.providerSerial,
+        inverterModel: jose.providerModel,
+        inverterGateway: jose.providerGatewayId,
+      }
+      : { found: false };
 
     const dumped = JSON.stringify(capturedLogs);
     report.secretLeakedInLogs = /app_secret|AUXSOL_APP_SECRET/i.test(dumped);
     report.tokenLeakedInLogs = /Bearer\s+\S+/i.test(dumped) || /"access_token"\s*:/i.test(dumped);
 
-    const diagnosis = classifyAuxsolDiscovery({
-      plantCount: plants.length,
-      targetFound: match.found,
-      realtimeQueried,
-      dataPresent,
-    });
-    report.FINAL_STATUS = diagnosisLabel(diagnosis);
-    report.note = diagnosis === 'D'
-      ? 'Telemetria presente no endpoint realtime. Persistência não executada.'
-      : 'Integração de coleta NÃO concluída. Descoberta apenas.';
-
     originalInfo(JSON.stringify({
-      'AUXSOL 2.2 — DISCOVERY': {
+      'SPRINT 4 — AUXSOL DISCOVERY': {
         authentication: report.authentication,
         plants: { result: 'OK', count: plants.length, httpStatus: plantHttpStatus, auxsolCode: plantCode },
-        target: report.target,
-        realtime: report.realtime,
-        persistence: { executed: false },
-        migration: { created: false },
+        discoveryResults,
+        realtime: realtimeByTarget,
+        normalization: normalizationByTarget,
+        binding: bindingByTarget,
+        persistence: report.persistence,
         FINAL_STATUS: report.FINAL_STATUS,
+        stages: report.stages,
       },
-      detail: report,
+      detail: {
+        ...report,
+        // evita dump enorme de plants/inverters no stdout principal se já listados
+      },
+      primaryMatchFound: primaryMatch.found,
     }, null, 2));
   } catch (error) {
     const classified = classifyError(error);
@@ -316,6 +517,7 @@ async function main() {
   } finally {
     console.info = originalInfo;
     console.error = originalError;
+    await prisma.$disconnect().catch(() => undefined);
   }
 }
 

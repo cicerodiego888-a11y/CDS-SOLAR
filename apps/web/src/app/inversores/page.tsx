@@ -185,7 +185,13 @@ function InversoresContent() {
           <TextField id="modelo-inv" label="Modelo" value={form.model} onChange={(model) => setForm({ ...form, model })} />
           <TextField id="serie-inv" label="Número de série" value={form.serialNumber} onChange={(serialNumber) => setForm({ ...form, serialNumber })} />
           <TextField id="pot-inv" label="Potência nominal (kW)" value={form.ratedPowerKw} onChange={(ratedPowerKw) => setForm({ ...form, ratedPowerKw })} />
-          <TextField id="ext-inv" label="Identificador externo" value={form.externalId} onChange={(externalId) => setForm({ ...form, externalId })} />
+          <TextField
+            id="ext-inv"
+            label="Identificador externo"
+            value={form.externalId}
+            onChange={(externalId) => setForm({ ...form, externalId })}
+            hint="Opcional — utilizado quando fornecido pelo fabricante/API. A identidade oficial da integração fica no IntegrationBinding."
+          />
           {!editing ? <SelectField id="status-inv" label="Status" value={form.status} options={RECORD_STATUS_OPTIONS} onChange={(status) => setForm({ ...form, status })} /> : null}
         </div>
       </Modal>
