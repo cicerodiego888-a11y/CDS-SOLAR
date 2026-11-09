@@ -5,7 +5,8 @@ import { formatCoveragePercent, formatPercentOrNd } from './format.ts';
 
 describe('Indicadores de disponibilidade', () => {
   it('não mostra 0% quando não há dados', () => {
-    assert.equal(formatPercentOrNd(null), 'N/D');
+    assert.equal(formatPercentOrNd(null), 'Não disponível');
+    assert.equal(formatCoveragePercent(null), 'Não disponível');
     assert.equal(formatCoveragePercent(0), '0%');
   });
 

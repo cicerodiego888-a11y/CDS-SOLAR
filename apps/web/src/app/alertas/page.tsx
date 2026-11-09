@@ -102,7 +102,7 @@ export default function AlertasPage() {
             placeholder="Todas"
             options={[
               { value: 'INFO', label: 'Informação' },
-              { value: 'WARNING', label: 'Atenção' },
+              { value: 'WARNING', label: 'Em atenção' },
               { value: 'CRITICAL', label: 'Crítico' },
             ]}
             onChange={setSeverity}

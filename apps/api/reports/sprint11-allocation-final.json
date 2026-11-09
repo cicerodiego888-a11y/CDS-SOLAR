@@ -1,0 +1,44 @@
+{
+  "sprint": "SPRINT 11",
+  "title": "Motor de Alocação Energética (kWh)",
+  "generatedAt": "2026-09-26T16:50:00.000Z",
+  "audit": {
+    "file": "apps/api/reports/sprint11-allocation-audit.json",
+    "generationSource": "MonitoringHistory.aggregateEnergyHistory (energyTotalKwh/energyTodayKwh)",
+    "kWToKwh": false,
+    "persistence": false,
+    "migration": false
+  },
+  "implementation": {
+    "service": "EnergyAllocationService",
+    "math": "allocation.math (integer scale)",
+    "multiVersion": "period segmentation by EnergyRateioVersion boundaries"
+  },
+  "api": {
+    "endpoint": "GET /api/energy/plants/:plantId/allocations",
+    "auth": ["JWT", "ENERGY_VIEW", "assertPlant"]
+  },
+  "frontend": {
+    "section": "Alocação de Energia em /gestao-energia",
+    "emptyDisplay": "—"
+  },
+  "monitoringImpact": { "changed": false },
+  "auxsolImpact": { "changed": false },
+  "realDataImpact": { "joseAltered": false, "ulissesAltered": false },
+  "database": { "migrationCreated": false, "migrationsCount": 13 },
+  "tests": {
+    "apiSuites": 69,
+    "apiPassed": 509,
+    "webPassed": 38,
+    "lint": "PASS",
+    "build": "PASS",
+    "prismaValidate": "PASS"
+  },
+  "pending": [
+    "Persistência/congelamento mensal de alocação (se necessário no Balanço)",
+    "Créditos + Compensação",
+    "Consumo real",
+    "Balanço Mensal definitivo"
+  ],
+  "decision": "APPROVED_WITH_PENDING"
+}

@@ -1,0 +1,488 @@
+{
+  "sprint": "B7-DATABASE-CLEANUP-01",
+  "phase": "PRE-DELETION AUDIT — AWAITING PO AUTHORIZATION",
+  "deletionsExecuted": false,
+  "timestamp": "2026-11-08T02:14:42.878Z",
+  "database": {
+    "host": "localhost",
+    "port": "5432",
+    "name": "b7_solar",
+    "user": "b7",
+    "identifiedAs": "apps/api/.env DATABASE_URL → PostgreSQL local b7_solar"
+  },
+  "preserveTargets": {
+    "ulissesExpectedId": "cmucom31o0005tymcu7cgt9d3",
+    "ulissesIntegrity": {
+      "found": true,
+      "name": "Ulisses Lima",
+      "hasTargetSn": true,
+      "hasTargetBinding": true
+    },
+    "joseMatches": [
+      {
+        "id": "cmu7lkkmu0000tyus5j0u824g",
+        "name": "José Bezerra Sobrinho",
+        "document": "06105181515",
+        "email": "josebezerra2712@gmail.com",
+        "createdAt": "2026-09-18T23:36:15.222Z"
+      }
+    ],
+    "note": "Um único José localizado — usar este como preservar."
+  },
+  "inventory": [
+    {
+      "id": "cmu7lkkmu0000tyus5j0u824g",
+      "name": "José Bezerra Sobrinho",
+      "document": "06105181515",
+      "email": "josebezerra2712@gmail.com",
+      "phone": "88996255866",
+      "status": "ACTIVE",
+      "consumerId": null,
+      "createdAt": "2026-09-18T23:36:15.222Z",
+      "updatedAt": "2026-09-18T23:36:15.222Z",
+      "deps": {
+        "plantCount": 1,
+        "plants": [
+          {
+            "id": "cmube71va0001tyi0i6d0f8ll",
+            "name": "José Bezerra Sobrinho",
+            "installedPowerKw": "20",
+            "distributor": "Equatorial",
+            "consumerUnit": "11230436",
+            "consumerUnitId": null
+          }
+        ],
+        "inverterCount": 1,
+        "inverters": [
+          {
+            "id": "cmubemnew0003tyi0yxakdzqj",
+            "plantId": "cmube71va0001tyi0i6d0f8ll",
+            "serialNumber": "ASN-10SL2508230101",
+            "model": "ASN-10SL",
+            "manufacturer": "AUXSOL",
+            "bindings": []
+          }
+        ],
+        "equipmentCount": 1,
+        "equipment": [
+          {
+            "id": "cmubetf0j0005tyi0q3sk5bsi",
+            "plantId": "cmube71va0001tyi0i6d0f8ll",
+            "type": "GATEWAY",
+            "serialNumber": "A012509010791620",
+            "inverterId": null
+          }
+        ],
+        "readingsCount": 0,
+        "alertsCount": 0,
+        "bindingsCount": 0,
+        "membershipsCount": 0,
+        "usersLinkedCount": 0,
+        "rateioVersionsCount": 0
+      },
+      "evidence": {
+        "looksLikeTestName": false,
+        "mentionedInSeedOrFixtures": false,
+        "hasAuxsolRealSn": true,
+        "serials": [
+          "ASN-10SL2508230101"
+        ]
+      },
+      "decision": {
+        "classification": "PRESERVE",
+        "confidence": "CONFIRMED",
+        "reason": "José — cadastro real a preservar (match por nome/documentação local).",
+        "deletionCandidate": false
+      }
+    },
+    {
+      "id": "cmucom31o0005tymcu7cgt9d3",
+      "name": "Ulisses Lima",
+      "document": "00893696455",
+      "email": "ulissesemanuel1234@gmail.com",
+      "phone": "88921466353",
+      "status": "ACTIVE",
+      "consumerId": null,
+      "createdAt": "2026-09-22T13:00:15.468Z",
+      "updatedAt": "2026-09-22T15:16:38.637Z",
+      "deps": {
+        "plantCount": 1,
+        "plants": [
+          {
+            "id": "cmucots7g0007tymccjpscinm",
+            "name": "Ulisses Lima",
+            "installedPowerKw": "10",
+            "distributor": "Equatorial",
+            "consumerUnit": "003005596601",
+            "consumerUnitId": null
+          }
+        ],
+        "inverterCount": 1,
+        "inverters": [
+          {
+            "id": "cmw76di320001tyys55mvm5ex",
+            "plantId": "cmucots7g0007tymccjpscinm",
+            "serialNumber": "ASN-10SL251016000352",
+            "model": "ASN-10SL",
+            "manufacturer": "AUXSOL",
+            "bindings": [
+              {
+                "id": "cmw76di400003tyys4dhcrfnh",
+                "provider": "AUXSOL",
+                "externalId": "ASN-10SL251016000352",
+                "status": "READY"
+              }
+            ]
+          }
+        ],
+        "equipmentCount": 1,
+        "equipment": [
+          {
+            "id": "cmucp320h0009tymcl89r0wm0",
+            "plantId": "cmucots7g0007tymccjpscinm",
+            "type": "GATEWAY",
+            "serialNumber": "A012510191909021",
+            "inverterId": "cmw76di320001tyys55mvm5ex"
+          }
+        ],
+        "readingsCount": 0,
+        "alertsCount": 1,
+        "bindingsCount": 1,
+        "membershipsCount": 0,
+        "usersLinkedCount": 0,
+        "rateioVersionsCount": 0
+      },
+      "evidence": {
+        "looksLikeTestName": false,
+        "mentionedInSeedOrFixtures": false,
+        "hasAuxsolRealSn": true,
+        "serials": [
+          "ASN-10SL251016000352"
+        ]
+      },
+      "decision": {
+        "classification": "PRESERVE",
+        "confidence": "CONFIRMED",
+        "reason": "Ulisses Lima — ID canônico da sprint; SN e binding reais confirmados.",
+        "deletionCandidate": false
+      }
+    },
+    {
+      "id": "cmuigi19j0001tyagat7gu92i",
+      "name": "SPRINT5 CERT TESTE EDITADO",
+      "document": "S5-1790431186647",
+      "email": "sprint5.cert.1790431186647@b7.invalid",
+      "phone": "85999991111",
+      "status": "ACTIVE",
+      "consumerId": "cmuigi1cn0004tyag0lwex26a",
+      "createdAt": "2026-09-26T13:59:46.664Z",
+      "updatedAt": "2026-09-26T14:08:32.538Z",
+      "deps": {
+        "plantCount": 2,
+        "plants": [
+          {
+            "id": "cmuigi1sm000ftyagt2ysvs0s",
+            "name": "SPRINT5 CERT USINA B",
+            "installedPowerKw": "3",
+            "distributor": null,
+            "consumerUnit": null,
+            "consumerUnitId": null
+          },
+          {
+            "id": "cmuigi1kb000btyag05i5kfdi",
+            "name": "SPRINT5 CERT USINA",
+            "installedPowerKw": "10.5",
+            "distributor": "SPRINT5 CERT DISTRIBUIDORA",
+            "consumerUnit": "910000111004",
+            "consumerUnitId": "cmuign4iz000ytyag59uueko6"
+          }
+        ],
+        "inverterCount": 2,
+        "inverters": [
+          {
+            "id": "cmuigi1qs000dtyags5ksnipy",
+            "plantId": "cmuigi1kb000btyag05i5kfdi",
+            "serialNumber": "SN-S5-1790431186647",
+            "model": "ASN-TEST-S5",
+            "manufacturer": "AUXSOL",
+            "bindings": []
+          },
+          {
+            "id": "cmuigi1t4000htyagu4n9oz5f",
+            "plantId": "cmuigi1sm000ftyagt2ysvs0s",
+            "serialNumber": "SN-S5-1790431186647",
+            "model": "ASN-TEST-S5",
+            "manufacturer": "AUXSOL",
+            "bindings": []
+          }
+        ],
+        "equipmentCount": 5,
+        "equipment": [
+          {
+            "id": "cmuigi1u6000jtyagds3r97dg",
+            "plantId": "cmuigi1kb000btyag05i5kfdi",
+            "type": "GATEWAY",
+            "serialNumber": "GW-S5-1790431186647",
+            "inverterId": "cmuigi1qs000dtyags5ksnipy"
+          },
+          {
+            "id": "cmuigi1xj000ltyag43h5h5bh",
+            "plantId": "cmuigi1kb000btyag05i5kfdi",
+            "type": "DATALOGGER",
+            "serialNumber": "DL-S5-1790431186647",
+            "inverterId": "cmuigi1qs000dtyags5ksnipy"
+          },
+          {
+            "id": "cmuigi1zq000ntyag7c9h82x8",
+            "plantId": "cmuigi1kb000btyag05i5kfdi",
+            "type": "MEDIDOR",
+            "serialNumber": "MEDIDOR-S5-1790431186647",
+            "inverterId": null
+          },
+          {
+            "id": "cmuigi20o000ptyagnri2p26l",
+            "plantId": "cmuigi1kb000btyag05i5kfdi",
+            "type": "COMUNICACAO",
+            "serialNumber": "COMUNICACAO-S5-1790431186647",
+            "inverterId": null
+          },
+          {
+            "id": "cmuigi21t000rtyag5qcpcllv",
+            "plantId": "cmuigi1kb000btyag05i5kfdi",
+            "type": "OUTRO",
+            "serialNumber": "OUTRO-S5-1790431186647",
+            "inverterId": null
+          }
+        ],
+        "readingsCount": 0,
+        "alertsCount": 0,
+        "bindingsCount": 0,
+        "membershipsCount": 0,
+        "usersLinkedCount": 0,
+        "rateioVersionsCount": 0
+      },
+      "evidence": {
+        "looksLikeTestName": false,
+        "mentionedInSeedOrFixtures": false,
+        "hasAuxsolRealSn": false,
+        "serials": [
+          "SN-S5-1790431186647",
+          "SN-S5-1790431186647"
+        ]
+      },
+      "decision": {
+        "classification": "REVIEW",
+        "confidence": "DOUBT",
+        "reason": "Não é Ulisses/José, mas não há evidência inequívoca de fictício. NÃO excluir sem confirmação.",
+        "deletionCandidate": false
+      }
+    },
+    {
+      "id": "cmuigi1b80002tyagumh96ecs",
+      "name": "SPRINT5 CERT SEM CONSUMER",
+      "document": "S5B-1790431186647",
+      "email": "sprint5.bare.1790431186647@b7.invalid",
+      "phone": "85999990003",
+      "status": "ACTIVE",
+      "consumerId": "cmuigo2t0000ztyag6z6y88nq",
+      "createdAt": "2026-09-26T13:59:46.725Z",
+      "updatedAt": "2026-09-26T14:04:28.600Z",
+      "deps": {
+        "plantCount": 1,
+        "plants": [
+          {
+            "id": "cmuigi1iu0009tyagzdzvz1q2",
+            "name": "SPRINT5 CERT USINA LEGADA",
+            "installedPowerKw": "4.5",
+            "distributor": "Equatorial Legado S5",
+            "consumerUnit": "LEGACY-UC-1790431186647",
+            "consumerUnitId": null
+          }
+        ],
+        "inverterCount": 0,
+        "inverters": [],
+        "equipmentCount": 0,
+        "equipment": [],
+        "readingsCount": 0,
+        "alertsCount": 0,
+        "bindingsCount": 0,
+        "membershipsCount": 0,
+        "usersLinkedCount": 0,
+        "rateioVersionsCount": 0
+      },
+      "evidence": {
+        "looksLikeTestName": false,
+        "mentionedInSeedOrFixtures": false,
+        "hasAuxsolRealSn": false,
+        "serials": []
+      },
+      "decision": {
+        "classification": "REVIEW",
+        "confidence": "DOUBT",
+        "reason": "Não é Ulisses/José, mas não há evidência inequívoca de fictício. NÃO excluir sem confirmação.",
+        "deletionCandidate": false
+      }
+    },
+    {
+      "id": "cmuigi1bn0003tyagp4m522ja",
+      "name": "SPRINT5 CERT OUTRO CONSUMER",
+      "document": "S5C-1790431186647",
+      "email": "sprint5.other.1790431186647@b7.invalid",
+      "phone": "85999990004",
+      "status": "ACTIVE",
+      "consumerId": "cmuigi1er0005tyago8coz4vt",
+      "createdAt": "2026-09-26T13:59:46.740Z",
+      "updatedAt": "2026-09-26T13:59:46.853Z",
+      "deps": {
+        "plantCount": 0,
+        "plants": [],
+        "inverterCount": 0,
+        "inverters": [],
+        "equipmentCount": 0,
+        "equipment": [],
+        "readingsCount": 0,
+        "alertsCount": 0,
+        "bindingsCount": 0,
+        "membershipsCount": 0,
+        "usersLinkedCount": 0,
+        "rateioVersionsCount": 0
+      },
+      "evidence": {
+        "looksLikeTestName": false,
+        "mentionedInSeedOrFixtures": false,
+        "hasAuxsolRealSn": false,
+        "serials": []
+      },
+      "decision": {
+        "classification": "REVIEW",
+        "confidence": "DOUBT",
+        "reason": "Não é Ulisses/José, mas não há evidência inequívoca de fictício. NÃO excluir sem confirmação.",
+        "deletionCandidate": false
+      }
+    },
+    {
+      "id": "cmuigi2as000styag2oa5xo2p",
+      "name": "SPRINT5 CERT VIA COMERCIAL",
+      "document": "S5D-1790431186647",
+      "email": "sprint5.co.1790431186647@b7.invalid",
+      "phone": null,
+      "status": "ACTIVE",
+      "consumerId": null,
+      "createdAt": "2026-09-26T13:59:48.004Z",
+      "updatedAt": "2026-09-26T13:59:48.004Z",
+      "deps": {
+        "plantCount": 0,
+        "plants": [],
+        "inverterCount": 0,
+        "inverters": [],
+        "equipmentCount": 0,
+        "equipment": [],
+        "readingsCount": 0,
+        "alertsCount": 0,
+        "bindingsCount": 0,
+        "membershipsCount": 0,
+        "usersLinkedCount": 0,
+        "rateioVersionsCount": 0
+      },
+      "evidence": {
+        "looksLikeTestName": false,
+        "mentionedInSeedOrFixtures": false,
+        "hasAuxsolRealSn": false,
+        "serials": []
+      },
+      "decision": {
+        "classification": "REVIEW",
+        "confidence": "DOUBT",
+        "reason": "Não é Ulisses/José, mas não há evidência inequívoca de fictício. NÃO excluir sem confirmação.",
+        "deletionCandidate": false
+      }
+    }
+  ],
+  "summary": {
+    "totalCustomers": 6,
+    "preserveCount": 2,
+    "candidateFictitiousCount": 0,
+    "reviewCount": 4,
+    "preserveIds": [
+      {
+        "id": "cmu7lkkmu0000tyus5j0u824g",
+        "name": "José Bezerra Sobrinho"
+      },
+      {
+        "id": "cmucom31o0005tymcu7cgt9d3",
+        "name": "Ulisses Lima"
+      }
+    ],
+    "candidateIds": [],
+    "reviewIds": [
+      {
+        "id": "cmuigi19j0001tyagat7gu92i",
+        "name": "SPRINT5 CERT TESTE EDITADO",
+        "reason": "Não é Ulisses/José, mas não há evidência inequívoca de fictício. NÃO excluir sem confirmação."
+      },
+      {
+        "id": "cmuigi1b80002tyagumh96ecs",
+        "name": "SPRINT5 CERT SEM CONSUMER",
+        "reason": "Não é Ulisses/José, mas não há evidência inequívoca de fictício. NÃO excluir sem confirmação."
+      },
+      {
+        "id": "cmuigi1bn0003tyagp4m522ja",
+        "name": "SPRINT5 CERT OUTRO CONSUMER",
+        "reason": "Não é Ulisses/José, mas não há evidência inequívoca de fictício. NÃO excluir sem confirmação."
+      },
+      {
+        "id": "cmuigi2as000styag2oa5xo2p",
+        "name": "SPRINT5 CERT VIA COMERCIAL",
+        "reason": "Não é Ulisses/José, mas não há evidência inequívoca de fictício. NÃO excluir sem confirmação."
+      }
+    ]
+  },
+  "sharedResources": {
+    "usersTotal": 1,
+    "usersWithoutCustomer": 1,
+    "manufacturers": 7,
+    "distributors": 1,
+    "consumers": 3,
+    "consumerUnits": 4,
+    "integrations": 0
+  },
+  "risks": [
+    "Customer.cascade remove Plants; Plant.cascade remove Inverters/Equipment/Readings/Alerts — exclusão deve ser ordenada e limitada aos IDs aprovados.",
+    "User.customerId e UserMembership podem referenciar clientes fictícios; usuários compartilhados NÃO devem ser apagados sem análise.",
+    "Consumer/ConsumerUnit/Distributor/Manufacturer são compartilhados — fora do escopo de exclusão automática.",
+    "Se José não for unicamente identificado, nenhuma exclusão deve ocorrer.",
+    "Backup é pré-requisito; se backup.ok=false, bloquear execução."
+  ],
+  "transactionalPlan": {
+    "steps": [
+      "1. Confirmar backup.ok=true e sha256.",
+      "2. PO autorizar lista EXATA de customerIds candidatos.",
+      "3. BEGIN; deletes ordenados por dependência apenas dos IDs aprovados.",
+      "4. Validar COUNT Customer = 2 (Ulisses+José) e integridade Ulisses SN/binding.",
+      "5. Reexecutar collect liveReading Ulisses (persist OFF).",
+      "6. COMMIT; se falha → ROLLBACK integral."
+    ],
+    "forbidden": [
+      "TRUNCATE",
+      "DROP DATABASE",
+      "prisma migrate reset",
+      "seed",
+      "CASCADE indiscriminado",
+      "DELETE sem WHERE"
+    ]
+  },
+  "plannedDeletes": [],
+  "plannedSql": "-- PLANEJADO — NÃO EXECUTAR SEM AUTORIZAÇÃO EXPLÍCITA DO PO\n-- Transação única; rollback integral em falha.\nBEGIN;\n-- Validação pós-delete (deve retornar apenas Ulisses + José):\nSELECT id, name FROM \"Customer\" ORDER BY name;\nCOMMIT;",
+  "backup": {
+    "attempted": true,
+    "ok": false,
+    "error": "spawnSync pg_dump ENOENT",
+    "fallbackError": "spawnSync pg_dump ENOENT",
+    "note": "Backup automático falhou. Não autorizar exclusão até backup manual verificável."
+  },
+  "authorizationGate": {
+    "status": "WAITING_PO_APPROVAL",
+    "requiredApproval": "Lista explícita de customerIds a excluir",
+    "doNotExecuteUntilApproved": true
+  }
+}

@@ -63,9 +63,27 @@ describe('Regras de monitoramento', () => {
   it('NO_RECENT_READING abre quando a janela é excedida', () => {
     const decision = new NoRecentReadingRule().evaluate(context({
       lastReadingAt: new Date('2026-09-05T11:00:00.000Z'),
+      persistedLastReadingAt: new Date('2026-09-05T11:00:00.000Z'),
       now: new Date('2026-09-05T12:00:00.000Z'),
     }));
     expect(decision).toMatchObject({ action: 'open', ruleCode: ALERT_RULE.NO_RECENT_READING, severity: 'CRITICAL' });
+  });
+
+  it('NO_RECENT_READING resolve só com leitura persistida recente', () => {
+    const recent = new Date('2026-09-05T12:00:00.000Z');
+    expect(new NoRecentReadingRule().evaluate(context({
+      lastReadingAt: recent,
+      persistedLastReadingAt: recent,
+      now: new Date('2026-09-05T12:05:00.000Z'),
+    }))).toEqual({ action: 'resolve', ruleCode: ALERT_RULE.NO_RECENT_READING });
+  });
+
+  it('NO_RECENT_READING com lastSyncAt recente sem persistido faz skip', () => {
+    expect(new NoRecentReadingRule().evaluate(context({
+      lastReadingAt: new Date('2026-09-05T12:00:00.000Z'),
+      persistedLastReadingAt: null,
+      now: new Date('2026-09-05T12:05:00.000Z'),
+    }))).toEqual({ action: 'skip' });
   });
 
   it('NO_RECENT_READING não cria para BLOCKED', () => {

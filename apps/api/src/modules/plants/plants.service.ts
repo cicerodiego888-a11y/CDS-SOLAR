@@ -10,8 +10,27 @@ const plantInclude = {
 const plantDetailInclude = {
   customer: true,
   consumerUnitRef: { include: { distributor: true, consumer: true } },
-  inverters: { include: { manufacturerRef: true } },
-  equipment: true,
+  inverters: {
+    include: {
+      manufacturerRef: true,
+      bindings: {
+        select: {
+          id: true,
+          provider: true,
+          externalId: true,
+          status: true,
+          lastSyncAt: true,
+          lastErrorAt: true,
+          lastErrorMessage: true,
+        },
+      },
+    },
+  },
+  equipment: {
+    include: {
+      inverter: { select: { id: true, model: true, serialNumber: true } },
+    },
+  },
   alerts: { take: 20, orderBy: { occurredAt: 'desc' as const } },
   _count: { select: { inverters: true, equipment: true } },
 } as const;

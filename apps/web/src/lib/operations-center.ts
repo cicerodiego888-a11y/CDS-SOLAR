@@ -1,3 +1,5 @@
+import { NORMALIZED_STATUS_LABELS, normalizedStatusLabel } from './status-labels.ts';
+
 export const OPERATIONS_PERIODS = [
   { id: 'today', label: 'Hoje' },
   { id: 'yesterday', label: 'Ontem' },
@@ -7,9 +9,9 @@ export const OPERATIONS_PERIODS = [
 ];
 
 export const OPERATIONS_STATUS_OPTIONS = [
-  { value: 'ONLINE', label: 'Online' },
-  { value: 'WARNING', label: 'Atenção' },
-  { value: 'OFFLINE', label: 'Offline' },
+  { value: 'ONLINE', label: NORMALIZED_STATUS_LABELS.ONLINE },
+  { value: 'WARNING', label: NORMALIZED_STATUS_LABELS.WARNING },
+  { value: 'OFFLINE', label: NORMALIZED_STATUS_LABELS.OFFLINE },
 ];
 
 export const OPERATIONS_EMPTY_PLANTS = 'Nenhuma usina cadastrada.';
@@ -45,9 +47,5 @@ export function operationsAlertHref(id: string) {
 }
 
 export function operationsStatusLabel(status?: string | null) {
-  if (status === 'ONLINE') return 'Online';
-  if (status === 'WARNING') return 'Atenção';
-  if (status === 'OFFLINE') return 'Offline';
-  if (status === 'ERROR') return 'Erro';
-  return 'Indefinido';
+  return normalizedStatusLabel(status);
 }

@@ -1,0 +1,140 @@
+{
+  "sprint": "B7-ULISSES-02",
+  "timestamp": "2026-11-08T02:00:32.938Z",
+  "flow": "Inverter → IntegrationBinding → IntegrationEngine → AuxsolAdapter → GET realtime → normalize → liveReading",
+  "remoteMutations": false,
+  "env": {
+    "mock": "OFF",
+    "persist": "OFF",
+    "appId": "39502"
+  },
+  "audit": {
+    "customerId": "cmucom31o0005tymcu7cgt9d3",
+    "customerMatch": true,
+    "plantId": "cmucots7g0007tymccjpscinm",
+    "plantMatch": true,
+    "inverterSerial": "ASN-10SL251016000352",
+    "manufacturer": "AUXSOL",
+    "bindingFound": true,
+    "bindingId": "cmw76di400003tyys4dhcrfnh",
+    "bindingStatus": "READY",
+    "bindingProvider": "AUXSOL",
+    "externalId": "1234568136545421",
+    "externalIdMatch": true,
+    "secretRefConfigured": true,
+    "secretRef": "AUXSOL_APP_SECRET",
+    "gatewayLinked": true,
+    "cadastroUnchanged": true
+  },
+  "collection": {
+    "ok": true,
+    "mode": "live",
+    "provider": "AUXSOL",
+    "integrationId": "cmw76di400003tyys4dhcrfnh",
+    "readings": 1,
+    "valid": 1,
+    "persisted": 0,
+    "message": "Leitura ao vivo obtida. Persistência desabilitada nesta configuração.",
+    "liveReading": {
+      "available": true,
+      "unavailableReason": null,
+      "collectedAt": "2026-11-07T17:29:39.000Z",
+      "powerKw": 0,
+      "energyTodayKwh": 69.32,
+      "energyMonthKwh": 457.53,
+      "energyTotalKwh": 5768.11,
+      "communicationOk": true,
+      "status": "UNKNOWN",
+      "equipmentStatus": null,
+      "lastCommAt": "2026-11-08T04:29:39.636+08:00",
+      "alarms": {
+        "present": false,
+        "summary": "Sem alarmes reportados.",
+        "codes": {
+          "mainFaultCode": 0,
+          "faultCode": 0,
+          "mainAlarmCode": 0,
+          "alarmCode": 0,
+          "lastAlarm": null,
+          "alarmCount": 0,
+          "alarmCode0": null,
+          "alarmCode1": null,
+          "faultCode0": null,
+          "faultCode1": null,
+          "faultCode2": null,
+          "faultCode3": null
+        }
+      },
+      "persisted": false
+    }
+  },
+  "endpoints": [
+    {
+      "operation": "auth",
+      "endpoint": "/auth/token",
+      "status": "start"
+    },
+    {
+      "operation": "http",
+      "endpoint": "/auth/token",
+      "httpStatus": 200,
+      "auxsolCode": "AWX-0000"
+    },
+    {
+      "operation": "auth",
+      "endpoint": "/auth/token",
+      "httpStatus": 200,
+      "auxsolCode": "AWX-0000",
+      "status": "success"
+    },
+    {
+      "operation": "http",
+      "endpoint": "/analysis/inverterReport/findInverterRealTimeInfoBySn/ASN-10SL251016000352",
+      "httpStatus": 200,
+      "auxsolCode": "AWX-0000"
+    },
+    {
+      "operation": "realtimeBySn",
+      "endpoint": "/analysis/inverterReport/findInverterRealTimeInfoBySn/ASN-10SL251016000352",
+      "httpStatus": 200,
+      "status": "success"
+    },
+    {
+      "operation": "collect",
+      "status": "success",
+      "mode": "live"
+    },
+    {
+      "operation": "collect",
+      "status": "success"
+    }
+  ],
+  "persistence": {
+    "readingsBefore": 0,
+    "readingsAfter": 0,
+    "delta": 0,
+    "flagPersist": false,
+    "confirmedNoPersist": true
+  },
+  "uiContract": {
+    "inverterDetailFields": [
+      "model",
+      "serialNumber",
+      "manufacturer",
+      "communication",
+      "powerKw",
+      "energyTodayKwh",
+      "energyMonthKwh",
+      "energyTotalKwh",
+      "collectedAt",
+      "lastCommAt",
+      "alarms"
+    ],
+    "plantSummary": "Resumo operacional + tabela monitoramento do inversor",
+    "emptyShowsUnavailableNotZero": true
+  },
+  "secretLeakCheck": {
+    "tokenInResult": false,
+    "tokenInLogs": false
+  }
+}

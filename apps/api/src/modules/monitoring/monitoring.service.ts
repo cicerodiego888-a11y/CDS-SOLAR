@@ -9,7 +9,17 @@ import {
 } from './monitoring.aggregation';
 import { MonitoringAccessService } from './monitoring.access';
 import { MonitoringAvailabilityService } from './monitoring.availability.service';
-import { MonitoringHistoryService, sumLatestEnergyTotal, sumLatestPowerKw } from './monitoring.history.service';
+import {
+  MonitoringHistoryService,
+  sumLatestEnergyField,
+  sumLatestEnergyTotal,
+  sumLatestPowerKw,
+} from './monitoring.history.service';
+import {
+  countOperationalIntegrationStates,
+  resolveOperationalIntegrationState,
+  resolvePlantOperationalIntegrationState,
+} from './plant-integration-state';
 
 @Injectable()
 export class MonitoringService {
@@ -26,10 +36,13 @@ export class MonitoringService {
     const historyScope = { plantWhere };
     const alertPlantWhere = plantWhere ? { plant: plantWhere } : {};
 
-    const [plants, openAlerts, recentAlerts, operator, today, month, selected, latest] = await Promise.all([
+    const [plants, openAlerts, recentAlerts, today, month, selected, latest] = await Promise.all([
       this.prisma.plant.findMany({
         where: plantWhere ?? {},
-        include: { customer: true, inverters: true },
+        include: {
+          customer: true,
+          inverters: { include: { bindings: true } },
+        },
         orderBy: { updatedAt: 'desc' },
       }),
       this.prisma.alert.findMany({
@@ -43,7 +56,6 @@ export class MonitoringService {
         orderBy: { occurredAt: 'desc' },
         take: 8,
       }),
-      this.prisma.user.findFirst({ orderBy: { createdAt: 'asc' }, select: { id: true, name: true } }),
       this.history.compute(this.history.parseQuery({ period: 'today' }), historyScope),
       this.history.compute(this.history.parseQuery({ period: 'thisMonth' }), historyScope),
       this.history.compute(this.history.parseQuery({ period }), historyScope),
@@ -51,17 +63,70 @@ export class MonitoringService {
     ]);
 
     const currentPower = sumLatestPowerKw(latest);
-    const energyLifetime = sumLatestEnergyTotal(latest);
+    const energyTotal = sumLatestEnergyTotal(latest);
     const latestByPlant = new Map<string, (typeof latest)[number]>();
+    const latestByInverter = new Map<string, (typeof latest)[number]>();
     for (const reading of latest) {
       const current = latestByPlant.get(reading.plantId);
       if (!current || current.collectedAt < reading.collectedAt) {
         latestByPlant.set(reading.plantId, reading);
       }
+      if (reading.inverterId) {
+        const currentInv = latestByInverter.get(reading.inverterId);
+        if (!currentInv || currentInv.collectedAt < reading.collectedAt) {
+          latestByInverter.set(reading.inverterId, reading);
+        }
+      }
     }
 
+    const operationalPlants = plants.map((plant) => {
+      const reading = latestByPlant.get(plant.id);
+      const plantToday = today.byPlant[plant.id] ?? null;
+      const inverterStates = plant.inverters.map((inverter) => {
+        const binding = inverter.bindings.find((item) => item.provider === inverter.manufacturer)
+          ?? inverter.bindings[0]
+          ?? null;
+        const invReading = latestByInverter.get(inverter.id);
+        return resolveOperationalIntegrationState({
+          hasBinding: Boolean(binding),
+          bindingStatus: binding?.status,
+          externalId: binding?.externalId,
+          lastReadingAt: invReading?.collectedAt ?? null,
+          communicationOk: invReading?.communicationOk ?? null,
+          now,
+        });
+      });
+      const integrationState = resolvePlantOperationalIntegrationState(inverterStates);
+      const power = sumLatestPowerKw(
+        plant.inverters
+          .map((inverter) => latestByInverter.get(inverter.id))
+          .filter((item): item is NonNullable<typeof item> => Boolean(item)),
+      );
+      return {
+        id: plant.id,
+        name: plant.name,
+        address: plant.address,
+        customerName: plant.customer?.name ?? null,
+        installedPowerKw: toNumber(plant.installedPowerKw),
+        energyTodayKwh: plantToday,
+        energyTodayHasData: plantToday !== null,
+        currentPowerKw: power.valueKw,
+        currentPowerHasData: power.hasData,
+        lastReadingAt: reading?.collectedAt ?? null,
+        openAlerts: openAlerts.filter((alert) => alert.plantId === plant.id).length,
+        operationalStatus: resolveOperationalStatus(plant.status, reading?.communicationOk),
+        integrationState,
+        plantStatus: plant.status,
+        latitude: toNumber(plant.latitude),
+        longitude: toNumber(plant.longitude),
+      };
+    });
+
+    const integrationCounts = countOperationalIntegrationStates(
+      operationalPlants.map((plant) => plant.integrationState),
+    );
+
     const dashboard = {
-      operator: operator ? { id: operator.id, name: operator.name } : null,
       generatedAt: now.toISOString(),
       period,
       timezone: selected.timezone,
@@ -76,7 +141,7 @@ export class MonitoringService {
         hasData: month.hasData,
         comparisonPercent: month.comparisonPercent,
       },
-      energyTotal: energyLifetime,
+      energyTotal,
       plants: {
         total: plants.length,
         online: plants.filter((plant) => plant.status === 'ACTIVE').length,
@@ -84,6 +149,7 @@ export class MonitoringService {
         maintenance: plants.filter((plant) => plant.status === 'INACTIVE').length,
         warning: plants.filter((plant) => plant.status === 'WARNING').length,
       },
+      integration: integrationCounts,
       alerts: {
         total: openAlerts.length,
         critical: openAlerts.filter((alert) => alert.severity === 'CRITICAL').length,
@@ -106,22 +172,8 @@ export class MonitoringService {
         energyKwh: selected.energyKwh,
         comparisonPercent: selected.comparisonPercent,
       },
-      recentPlants: plants.slice(0, 8).map((plant) => {
-        const reading = latestByPlant.get(plant.id);
-        const plantToday = today.byPlant[plant.id] ?? null;
-        return {
-          id: plant.id,
-          name: plant.name,
-          customerName: plant.customer?.name ?? null,
-          installedPowerKw: toNumber(plant.installedPowerKw),
-          energyTodayKwh: plantToday,
-          energyTodayHasData: plantToday !== null,
-          operationalStatus: resolveOperationalStatus(plant.status, reading?.communicationOk),
-          plantStatus: plant.status,
-          latitude: toNumber(plant.latitude),
-          longitude: toNumber(plant.longitude),
-        };
-      }),
+      recentPlants: operationalPlants.slice(0, 8),
+      operationalPlants,
       recentAlerts: recentAlerts.map((alert) => ({
         id: alert.id,
         title: alert.title,
@@ -163,6 +215,14 @@ export class MonitoringService {
     });
     const activeAlerts = alerts.filter((alert) => alert.status === 'OPEN' || alert.status === 'ACKNOWLEDGED');
     const online = latest.filter((item) => item.communicationOk !== false).length;
+    const currentPower = sumLatestPowerKw(latest);
+    const energyToday = sumLatestEnergyField(latest as Array<Record<string, unknown>>, 'energyTodayKwh');
+    const energyMonth = sumLatestEnergyField(latest as Array<Record<string, unknown>>, 'energyMonthKwh');
+    const energyTotal = sumLatestEnergyTotal(latest);
+    const lastReadingAt = latest.reduce<Date | null>((max, item) => {
+      if (!max || item.collectedAt > max) return item.collectedAt;
+      return max;
+    }, null);
     return {
       plant: {
         id: plant.id,
@@ -175,6 +235,16 @@ export class MonitoringService {
       history,
       kpis: {
         periodEnergyKwh: history.energyKwh,
+        periodEnergyHasData: history.hasData,
+        currentPowerKw: currentPower.valueKw,
+        currentPowerHasData: currentPower.hasData,
+        energyTodayKwh: energyToday.valueKwh,
+        energyTodayHasData: energyToday.hasData,
+        energyMonthKwh: energyMonth.valueKwh,
+        energyMonthHasData: energyMonth.hasData,
+        energyTotalKwh: energyTotal.valueKwh,
+        energyTotalHasData: energyTotal.hasData,
+        lastReadingAt,
         installedPowerKwp: toNumber(plant.installedPowerKw),
         inverterCount: plant.inverters.length,
         invertersOnline: latest.length ? online : null,
@@ -191,13 +261,31 @@ export class MonitoringService {
       inverterAvailability: availability.inverters,
       inverters: plant.inverters.map((inverter) => {
         const reading = latest.find((item) => item.inverterId === inverter.id);
+        const binding = inverter.bindings.find((item) => item.provider === inverter.manufacturer)
+          ?? inverter.bindings[0]
+          ?? null;
         return {
           id: inverter.id,
           model: inverter.model,
+          serialNumber: inverter.serialNumber,
+          ratedPowerKw: toNumber(inverter.ratedPowerKw),
           status: inverter.status,
+          manufacturerName: inverter.manufacturerRef?.name ?? null,
+          manufacturerCode: inverter.manufacturerRef?.code ?? inverter.manufacturer ?? null,
           lastReadingAt: reading?.collectedAt ?? null,
           communicationOk: reading?.communicationOk ?? null,
           powerKw: toNumber(reading?.powerKw),
+          powerHasData: reading?.powerKw != null,
+          binding: binding
+            ? {
+                provider: binding.provider,
+                externalId: binding.externalId,
+                status: binding.status,
+                lastSyncAt: binding.lastSyncAt,
+                lastErrorAt: binding.lastErrorAt,
+                lastErrorMessage: binding.lastErrorMessage,
+              }
+            : null,
         };
       }),
       alerts,

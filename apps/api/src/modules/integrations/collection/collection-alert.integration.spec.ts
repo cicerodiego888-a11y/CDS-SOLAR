@@ -17,6 +17,21 @@ function inverter() {
 }
 
 describe('Coleta → persistência → AlertEngine', () => {
+  const prevPersist = process.env.AUXSOL_PERSIST_READINGS;
+  const prevIds = process.env.AUXSOL_PERSIST_INVERTER_IDS;
+
+  beforeEach(() => {
+    process.env.AUXSOL_PERSIST_READINGS = 'true';
+    process.env.AUXSOL_PERSIST_INVERTER_IDS = 'i1';
+  });
+
+  afterEach(() => {
+    if (prevPersist === undefined) delete process.env.AUXSOL_PERSIST_READINGS;
+    else process.env.AUXSOL_PERSIST_READINGS = prevPersist;
+    if (prevIds === undefined) delete process.env.AUXSOL_PERSIST_INVERTER_IDS;
+    else process.env.AUXSOL_PERSIST_INVERTER_IDS = prevIds;
+  });
+
   it('leitura válida OFFLINE cria avaliação de alerta', async () => {
     const evaluateAfterCollection = jest.fn().mockResolvedValue([{ id: 'alert-1' }]);
     const prisma = {
@@ -94,5 +109,40 @@ describe('Coleta → persistência → AlertEngine', () => {
 
     await expect(service.collectInverter('i1')).rejects.toBeInstanceOf(CollectionError);
     expect(evaluateAfterCollection).not.toHaveBeenCalled();
+  });
+
+  it('Opção A: live válida sem persistência atualiza lastSyncAt e NÃO avalia alertas', async () => {
+    const evaluateAfterCollection = jest.fn().mockResolvedValue([]);
+    const prisma = {
+      inverter: { findUnique: jest.fn().mockResolvedValue(inverter()) },
+      integrationBinding: { update: jest.fn().mockResolvedValue({}) },
+    };
+    const collectedAt = new Date('2026-11-08T02:55:00.000Z');
+    const adapter = {
+      provider: 'AUXSOL',
+      capabilities: () => ['collect'],
+      runtimeState: () => ({ mode: 'live', persistable: false, available: true }),
+      collect: async () => [{
+        collectedAt,
+        communicationOk: true,
+        status: 'ONLINE',
+        powerKw: 0,
+        energyTodayKwh: 69.32,
+      }],
+    };
+    const persistence = { persist: jest.fn() };
+    const service = new IntegrationCollectionService(
+      prisma as never,
+      persistence as never,
+      { evaluateAfterCollection } as never,
+    ).useEngine(new IntegrationEngine().register(adapter as never));
+
+    const result = await service.collectInverter('i1');
+    expect(result.persisted).toBe(0);
+    expect(persistence.persist).not.toHaveBeenCalled();
+    expect(evaluateAfterCollection).not.toHaveBeenCalled();
+    expect(prisma.integrationBinding.update).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ lastSyncAt: collectedAt }),
+    }));
   });
 });

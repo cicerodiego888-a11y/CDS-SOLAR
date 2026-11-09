@@ -1,0 +1,238 @@
+{
+  "sprint": "B7-DATABASE-CLEANUP-02",
+  "authorization": "PO explicit approval for 4 customerIds only",
+  "timestamp": "2026-11-08T02:27:04.296Z",
+  "scopeNotExpanded": true,
+  "backup": {
+    "path": "C:\\Users\\cicer\\Desktop\\B7 Solar\\B7-Solar-Platform-exe\\apps\\api\\reports\\database-cleanup\\1794104185816\\b7_solar-backup-1794104185816.dump",
+    "sha256": "6e4bd7edd3fe8961e1700b8ec63a3ae3013438535f3fa5f0687d5730fa778d60",
+    "expectedSha256": "6e4bd7edd3fe8961e1700b8ec63a3ae3013438535f3fa5f0687d5730fa778d60",
+    "verified": true
+  },
+  "before": {
+    "customers": [
+      {
+        "id": "cmu7lkkmu0000tyus5j0u824g",
+        "name": "José Bezerra Sobrinho"
+      },
+      {
+        "id": "cmuigi1bn0003tyagp4m522ja",
+        "name": "SPRINT5 CERT OUTRO CONSUMER"
+      },
+      {
+        "id": "cmuigi1b80002tyagumh96ecs",
+        "name": "SPRINT5 CERT SEM CONSUMER"
+      },
+      {
+        "id": "cmuigi19j0001tyagat7gu92i",
+        "name": "SPRINT5 CERT TESTE EDITADO"
+      },
+      {
+        "id": "cmuigi2as000styag2oa5xo2p",
+        "name": "SPRINT5 CERT VIA COMERCIAL"
+      },
+      {
+        "id": "cmucom31o0005tymcu7cgt9d3",
+        "name": "Ulisses Lima"
+      }
+    ],
+    "preserve": {
+      "ulisses": {
+        "id": "cmucom31o0005tymcu7cgt9d3",
+        "name": "Ulisses Lima",
+        "plantIds": [
+          "cmucots7g0007tymccjpscinm"
+        ],
+        "inverterIds": [
+          "cmw76di320001tyys55mvm5ex"
+        ],
+        "equipmentIds": [
+          "cmucp320h0009tymcl89r0wm0"
+        ],
+        "bindingIds": [
+          "cmw76di400003tyys4dhcrfnh"
+        ],
+        "serials": [
+          "ASN-10SL251016000352"
+        ]
+      },
+      "jose": {
+        "id": "cmu7lkkmu0000tyus5j0u824g",
+        "name": "José Bezerra Sobrinho",
+        "plantIds": [
+          "cmube71va0001tyi0i6d0f8ll"
+        ],
+        "inverterIds": [
+          "cmubemnew0003tyi0yxakdzqj"
+        ],
+        "equipmentIds": [
+          "cmubetf0j0005tyi0q3sk5bsi"
+        ],
+        "bindingIds": [],
+        "serials": [
+          "ASN-10SL2508230101"
+        ]
+      }
+    },
+    "targets": [
+      {
+        "id": "cmuigi19j0001tyagat7gu92i",
+        "name": "SPRINT5 CERT TESTE EDITADO",
+        "plantIds": [
+          "cmuigi1sm000ftyagt2ysvs0s",
+          "cmuigi1kb000btyag05i5kfdi"
+        ],
+        "inverterIds": [
+          "cmuigi1t4000htyagu4n9oz5f",
+          "cmuigi1qs000dtyags5ksnipy"
+        ],
+        "equipmentIds": [
+          "cmuigi1u6000jtyagds3r97dg",
+          "cmuigi1xj000ltyag43h5h5bh",
+          "cmuigi1zq000ntyag7c9h82x8",
+          "cmuigi20o000ptyagnri2p26l",
+          "cmuigi21t000rtyag5qcpcllv"
+        ],
+        "bindingIds": [],
+        "serials": [
+          "SN-S5-1790431186647",
+          "SN-S5-1790431186647"
+        ]
+      },
+      {
+        "id": "cmuigi1b80002tyagumh96ecs",
+        "name": "SPRINT5 CERT SEM CONSUMER",
+        "plantIds": [
+          "cmuigi1iu0009tyagzdzvz1q2"
+        ],
+        "inverterIds": [],
+        "equipmentIds": [],
+        "bindingIds": [],
+        "serials": []
+      },
+      {
+        "id": "cmuigi1bn0003tyagp4m522ja",
+        "name": "SPRINT5 CERT OUTRO CONSUMER",
+        "plantIds": [],
+        "inverterIds": [],
+        "equipmentIds": [],
+        "bindingIds": [],
+        "serials": []
+      },
+      {
+        "id": "cmuigi2as000styag2oa5xo2p",
+        "name": "SPRINT5 CERT VIA COMERCIAL",
+        "plantIds": [],
+        "inverterIds": [],
+        "equipmentIds": [],
+        "bindingIds": [],
+        "serials": []
+      }
+    ],
+    "shared": {
+      "users": 1,
+      "manufacturers": 7,
+      "distributors": 1,
+      "consumers": 3,
+      "consumerUnits": 4
+    }
+  },
+  "after": {
+    "customers": [
+      {
+        "id": "cmu7lkkmu0000tyus5j0u824g",
+        "name": "José Bezerra Sobrinho"
+      },
+      {
+        "id": "cmucom31o0005tymcu7cgt9d3",
+        "name": "Ulisses Lima"
+      }
+    ],
+    "preserve": {
+      "ulisses": {
+        "id": "cmucom31o0005tymcu7cgt9d3",
+        "name": "Ulisses Lima",
+        "plantIds": [
+          "cmucots7g0007tymccjpscinm"
+        ],
+        "inverterIds": [
+          "cmw76di320001tyys55mvm5ex"
+        ],
+        "equipmentIds": [
+          "cmucp320h0009tymcl89r0wm0"
+        ],
+        "bindingIds": [
+          "cmw76di400003tyys4dhcrfnh"
+        ],
+        "serials": [
+          "ASN-10SL251016000352"
+        ]
+      },
+      "jose": {
+        "id": "cmu7lkkmu0000tyus5j0u824g",
+        "name": "José Bezerra Sobrinho",
+        "plantIds": [
+          "cmube71va0001tyi0i6d0f8ll"
+        ],
+        "inverterIds": [
+          "cmubemnew0003tyi0yxakdzqj"
+        ],
+        "equipmentIds": [
+          "cmubetf0j0005tyi0q3sk5bsi"
+        ],
+        "bindingIds": [],
+        "serials": [
+          "ASN-10SL2508230101"
+        ]
+      }
+    },
+    "shared": {
+      "users": 1,
+      "manufacturers": 7,
+      "distributors": 1,
+      "consumers": 3,
+      "consumerUnits": 4
+    },
+    "deletedCounts": {
+      "alertEvents": 0,
+      "alerts": 0,
+      "readings": 0,
+      "bindings": 0,
+      "rateioLines": 0,
+      "rateioVersions": 0,
+      "equipment": 5,
+      "inverters": 2,
+      "memberships": 0,
+      "plants": 3,
+      "customers": 4
+    }
+  },
+  "validation": {
+    "onlyTwoCustomers": true,
+    "customersAreUlissesAndJose": true,
+    "ulissesPlantPresent": true,
+    "josePlantPresent": true,
+    "ulissesSnPresent": true,
+    "ulissesBindingPresent": true,
+    "deletedIdsGone": true,
+    "stillPresent": [],
+    "sharedUsersUnchanged": true,
+    "sharedManufacturersUnchanged": true,
+    "sharedDistributorsUnchanged": true,
+    "sharedConsumersUnchanged": true,
+    "sharedConsumerUnitsUnchanged": true
+  },
+  "liveReadingSmoke": {
+    "inverterId": "cmw76di320001tyys55mvm5ex",
+    "ok": true,
+    "mode": "live",
+    "persisted": 0,
+    "readingsCountDb": 0,
+    "liveAvailable": true,
+    "powerKw": 0,
+    "energyTodayKwh": 69.32,
+    "message": "Leitura ao vivo obtida. Persistência desabilitada nesta configuração.",
+    "noPersistConfirmed": true
+  },
+  "status": "SUCCESS"
+}

@@ -7,6 +7,8 @@ import { EmptyState } from '../ui/EmptyState';
 import { ErrorMessage } from '../ui/ErrorMessage';
 import { LoadingState } from '../ui/LoadingState';
 import { MetricCard } from '../ui/MetricCard';
+import { PageHeader } from '../ui/PageHeader';
+import { SectionHeader } from '../ui/SectionHeader';
 import { StatusBadge } from '../ui/StatusBadge';
 import { Button } from '../ui/Button';
 import {
@@ -66,15 +68,12 @@ export function DashboardView() {
 
   return (
     <div className="shell dashboard">
-      <header className="dashboard-hero">
-        <div>
-          <div className="eyebrow">B7 Solar</div>
-          <h1>Olá, {userName}</h1>
-          <p>Panorama operacional das usinas em tempo real, com dados oficiais do monitoramento.</p>
-          <small className="clock">{formatClock(now)}</small>
-        </div>
-        <span className="status">Sistema operacional</span>
-      </header>
+      <PageHeader
+        eyebrow="Dashboard"
+        title={`Olá, ${userName}`}
+        description="Visão geral da operação e geração das usinas monitoradas."
+        actions={<time className="dashboard-clock" dateTime={now.toISOString()}>{formatClock(now)}</time>}
+      />
 
       {loading && !dashboard ? <LoadingState message="Carregando painel..." /> : null}
 
@@ -91,76 +90,102 @@ export function DashboardView() {
 
       {dashboard ? (
         <>
-          <section className="cards dashboard-cards">
-            <MetricCard
-              title="Potência atual"
-              value={formatPowerKw(dashboard.currentPower.valueKw ?? null, dashboard.currentPower.hasData)}
-              comparison={comparisonLabel(dashboard.currentPower.comparisonPercent)}
-              note={dashboard.currentPower.hasData ? undefined : 'Sem dados de monitoramento'}
-              accent="blue"
-            />
-            <MetricCard
-              title="Geração hoje"
-              value={formatEnergyKwh(dashboard.energyToday.valueKwh ?? null, dashboard.energyToday.hasData)}
-              comparison={comparisonLabel(dashboard.energyToday.comparisonPercent)}
-              accent="green"
-            />
-            <MetricCard
-              title="Geração no mês"
-              value={formatEnergyKwh(dashboard.energyMonth.valueKwh ?? null, dashboard.energyMonth.hasData)}
-              accent="green"
-            />
-            <MetricCard
-              title="Geração total"
-              value={formatEnergyKwh(dashboard.energyTotal.valueKwh ?? null, dashboard.energyTotal.hasData)}
-              accent="blue"
-            />
-            <MetricCard
-              title="Usinas"
-              value={dashboard.plants.total}
-              accent="blue"
-              breakdown={[
-                { label: 'online', value: dashboard.plants.online, tone: 'success' },
-                { label: 'offline', value: dashboard.plants.offline, tone: 'danger' },
-              ]}
-            />
-            <MetricCard
-              title="Alertas"
-              value={dashboard.alerts.total}
-              accent="amber"
-              breakdown={[
-                { label: 'crítico', value: dashboard.alerts.critical, tone: 'danger' },
-                { label: 'atenção', value: dashboard.alerts.warning, tone: 'warning' },
-              ]}
-            />
-            <MetricCard
-              title="Clientes"
-              value={dashboard.customers.total}
-              note="Ativos no sistema"
-              accent="green"
-            />
+          <section className="dashboard-kpis" aria-label="Indicadores principais">
+            <div className="dashboard-kpi-group">
+              <h2 className="dashboard-section-label">Geração</h2>
+              <div className="cards dashboard-cards dashboard-cards-energy">
+                <MetricCard
+                  title="Potência atual"
+                  value={formatPowerKw(dashboard.currentPower.valueKw ?? null, dashboard.currentPower.hasData)}
+                  comparison={comparisonLabel(dashboard.currentPower.comparisonPercent)}
+                  note={dashboard.currentPower.hasData ? undefined : 'Sem dados de monitoramento'}
+                  accent="blue"
+                />
+                <MetricCard
+                  title="Geração hoje"
+                  value={formatEnergyKwh(dashboard.energyToday.valueKwh ?? null, dashboard.energyToday.hasData)}
+                  comparison={comparisonLabel(dashboard.energyToday.comparisonPercent)}
+                  note={dashboard.energyToday.hasData ? undefined : 'Sem dados de geração'}
+                  accent="green"
+                />
+                <MetricCard
+                  title="Geração no mês"
+                  value={formatEnergyKwh(dashboard.energyMonth.valueKwh ?? null, dashboard.energyMonth.hasData)}
+                  note={dashboard.energyMonth.hasData ? undefined : 'Sem dados de geração'}
+                  accent="green"
+                />
+                <MetricCard
+                  title="Geração total"
+                  value={formatEnergyKwh(dashboard.energyTotal.valueKwh ?? null, dashboard.energyTotal.hasData)}
+                  note={dashboard.energyTotal.hasData ? undefined : 'Sem dados de geração'}
+                  accent="blue"
+                />
+              </div>
+            </div>
+
+            <div className="dashboard-kpi-group">
+              <h2 className="dashboard-section-label">Operação</h2>
+              <div className="cards dashboard-cards dashboard-cards-ops">
+                <MetricCard
+                  title="Usinas"
+                  value={dashboard.plants.total}
+                  accent="blue"
+                  breakdown={[
+                    { label: 'online', value: dashboard.integration?.online ?? dashboard.plants.online, tone: 'success' },
+                    { label: 'erro', value: dashboard.integration?.error ?? 0, tone: 'danger' },
+                  ]}
+                />
+                <MetricCard
+                  title="Integração"
+                  value={dashboard.integration?.awaitingIdentification ?? '—'}
+                  note={dashboard.integration ? 'Aguardando identificação' : 'Sem dados de integração'}
+                  accent="amber"
+                  breakdown={dashboard.integration ? [
+                    { label: 'aguard. dados', value: dashboard.integration.awaitingData, tone: 'warning' },
+                    { label: 'sem com.', value: dashboard.integration.noCommunication, tone: 'danger' },
+                  ] : undefined}
+                />
+                <MetricCard
+                  title="Alertas"
+                  value={dashboard.alerts.total}
+                  accent="amber"
+                  breakdown={[
+                    { label: 'crítico', value: dashboard.alerts.critical, tone: 'danger' },
+                    { label: 'atenção', value: dashboard.alerts.warning, tone: 'warning' },
+                  ]}
+                />
+                <MetricCard
+                  title="Clientes"
+                  value={dashboard.customers.total}
+                  note="Ativos no sistema"
+                  accent="green"
+                />
+              </div>
+            </div>
           </section>
 
           <div className="dashboard-grid">
-            <section className="panel">
-              <div className="panel-title">
-                <div>
-                  <h2>Geração de energia</h2>
-                  <p>Valores provenientes das leituras normalizadas.</p>
-                </div>
-                <div className="period-filter" role="tablist" aria-label="Período">
-                  {DASHBOARD_PERIODS.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className={item.id === period ? 'period-btn active' : 'period-btn'}
-                      onClick={() => setPeriod(item.id)}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+            <section className="dashboard-panel dashboard-panel-chart">
+              <SectionHeader
+                title="Geração de energia"
+                description="Valores provenientes das leituras normalizadas."
+                actions={(
+                  <div className="period-filter" role="tablist" aria-label="Período">
+                    {DASHBOARD_PERIODS.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={item.id === period}
+                        className={item.id === period ? 'period-btn active' : 'period-btn'}
+                        onClick={() => setPeriod(item.id)}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              />
               <GenerationChart points={dashboard.generationSeries} />
             </section>
 
@@ -173,16 +198,16 @@ export function DashboardView() {
           </div>
 
           <div className="dashboard-grid">
-            <section className="panel">
-              <div className="panel-title">
-                <div>
-                  <h2>Últimas usinas</h2>
-                  <p>Dados consolidados do núcleo de monitoramento.</p>
-                </div>
-                <Link href="/usinas">
-                  <Button variant="secondary">Ver todas</Button>
-                </Link>
-              </div>
+            <section className="dashboard-panel">
+              <SectionHeader
+                title="Últimas usinas"
+                description="Dados consolidados do núcleo de monitoramento."
+                actions={(
+                  <Link href="/usinas">
+                    <Button variant="secondary">Ver todas</Button>
+                  </Link>
+                )}
+              />
               <DataTable
                 rows={dashboard.recentPlants}
                 rowKey={(row) => row.id}
@@ -214,16 +239,16 @@ export function DashboardView() {
               />
             </section>
 
-            <section className="panel">
-              <div className="panel-title">
-                <div>
-                  <h2>Alertas recentes</h2>
-                  <p>Eventos reais registrados no sistema.</p>
-                </div>
-                <Link href="/alertas">
-                  <Button variant="secondary">Ver todos</Button>
-                </Link>
-              </div>
+            <section className="dashboard-panel">
+              <SectionHeader
+                title="Alertas recentes"
+                description="Eventos reais registrados no sistema."
+                actions={(
+                  <Link href="/alertas">
+                    <Button variant="secondary">Ver todos</Button>
+                  </Link>
+                )}
+              />
               {dashboard.recentAlerts.length ? (
                 <ul className="alert-list">
                   {dashboard.recentAlerts.map((alert) => (

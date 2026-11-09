@@ -95,3 +95,9 @@ export function applyPlantUnitSelection(
 export function otherConsumerUnitMessage() {
   return 'Esta unidade consumidora pertence a outro consumidor e não pode ser vinculada a esta usina.';
 }
+
+/** Enquanto as UCs do cliente não chegaram, não exibir os campos legados editáveis. */
+export function plantEnergyFieldMode(unitsLoaded: boolean, unitCount: number): 'loading' | 'formal' | 'legacy' {
+  if (!unitsLoaded) return 'loading';
+  return unitCount > 0 ? 'formal' : 'legacy';
+}

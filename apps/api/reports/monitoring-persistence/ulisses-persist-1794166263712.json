@@ -1,0 +1,43 @@
+{
+  "sprint": "B7-MONITORING-PERSISTENCE-01",
+  "at": "2026-11-08T19:31:01.713Z",
+  "persistEnv": "true",
+  "allowlist": [
+    "cmw76di320001tyys55mvm5ex"
+  ],
+  "inverterAllowed": true,
+  "readingsBefore": 0,
+  "firstCollect": {
+    "ok": true,
+    "persisted": 1,
+    "readings": 1,
+    "valid": 1,
+    "powerKw": 0.81,
+    "energyTodayKwh": 64.59,
+    "collectedAt": "2026-11-08T16:29:41.000Z",
+    "lastCommAt": "2026-11-09T03:29:41.751+08:00",
+    "message": "Sincronização concluída."
+  },
+  "secondCollect": {
+    "ok": true,
+    "persisted": 0,
+    "note": "Reexecução — esperado persisted=0 se mesma collectedAt (idempotência)."
+  },
+  "readingsAfter": 1,
+  "latest": [
+    {
+      "id": "cmw889ovy0001tyv89szup71r",
+      "plantId": "cmucots7g0007tymccjpscinm",
+      "inverterId": "cmw76di320001tyys55mvm5ex",
+      "collectedAt": "2026-11-08T16:29:41.000Z",
+      "powerKw": "0.8100000000000001",
+      "energyTodayKwh": "64.59",
+      "sourceProvider": "AUXSOL",
+      "idempotencyKey": "AUXSOL:cmw76di320001tyys55mvm5ex:ASN-10SL251016000352:2026-11-08 16:29:41",
+      "rawHasToken": false,
+      "rawHasSecret": false
+    }
+  ],
+  "durationMs": 1996,
+  "status": "OK"
+}

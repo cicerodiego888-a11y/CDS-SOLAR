@@ -1,0 +1,88 @@
+{
+  "sprint": "SPRINT 10",
+  "title": "Motor de Rateio Versionado + Tela de Alocação",
+  "generatedAt": "2026-09-26T16:30:00.000Z",
+  "baseline": {
+    "file": "apps/api/reports/sprint10-rateio-baseline.json",
+    "apiTests": 467,
+    "webTests": 38,
+    "lint": "PASS",
+    "build": "PASS",
+    "migrationsBefore": 12
+  },
+  "audit": {
+    "file": "apps/api/reports/sprint10-rateio-audit.json",
+    "rateioExisted": false,
+    "migrationNeeded": true
+  },
+  "domain": {
+    "concept": "EnergyRateioVersion + EnergyRateioLine",
+    "rule100": "operational_b7_configuration",
+    "statement": "Rateio representa uma regra de distribuição. Não representa, por si só, energia compensada, crédito ou saldo."
+  },
+  "model": {
+    "tables": ["EnergyRateioVersion", "EnergyRateioLine"],
+    "percentage": "Decimal(7,4)",
+    "validity": "[validFrom, validTo)",
+    "legacyPlantConsumerUnitUsed": false
+  },
+  "migration": {
+    "name": "20260926170000_energy_rateio_versioned",
+    "destructive": false,
+    "applied": true,
+    "migrationsAfter": 13
+  },
+  "api": {
+    "base": "/api/energy/plants/:plantId/rateios",
+    "endpoints": ["GET /", "GET /current", "GET /history", "POST /", "POST /:id/new-version", "POST /:id/cancel"]
+  },
+  "authorization": {
+    "read": "ENERGY_VIEW",
+    "write": "ENERGY_UPDATE",
+    "rolesWrite": ["ADMIN", "OPERADOR", "COMERCIAL"]
+  },
+  "frontend": {
+    "route": "/gestao-energia/rateios",
+    "futureColumns": ["Consumo", "Compensado", "Crédito", "Saldo"],
+    "futureColumnsDisplay": "—"
+  },
+  "versioning": {
+    "immutableHistory": true,
+    "newVersionFlow": true,
+    "overlapRejected": true
+  },
+  "validation": {
+    "sum100": true,
+    "consumerBelongsToUnit": true,
+    "transactional": true,
+    "plantForUpdateLock": true
+  },
+  "lumiReference": {
+    "used": true,
+    "usage": "functional_reference_only"
+  },
+  "monitoringImpact": { "changed": false },
+  "auxsolImpact": { "changed": false },
+  "realDataImpact": {
+    "joseAltered": false,
+    "ulissesAltered": false,
+    "autoRateioCreated": false
+  },
+  "tests": {
+    "apiSuites": 67,
+    "apiPassed": 491,
+    "webPassed": 38,
+    "lint": "PASS",
+    "build": "PASS",
+    "prismaValidate": "PASS",
+    "migrations": 13
+  },
+  "pending": [
+    "Enum oficial de modalidade SCEE",
+    "Cálculo kWh alocado (geração × %)",
+    "Créditos + Compensação",
+    "Consumo real (ingestão)",
+    "Balanço Mensal definitivo"
+  ],
+  "decision": "APPROVED_WITH_PENDING"
+}

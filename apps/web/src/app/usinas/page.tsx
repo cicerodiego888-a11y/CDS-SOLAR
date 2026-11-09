@@ -21,8 +21,16 @@ import {
   consumerUnitLabel,
   plantConsumerUnitDisplay,
   plantDistributorDisplay,
+  plantEnergyFieldMode,
 } from '../../lib/consumer-units';
-import { can, formatPower, parsePowerKw, PLANT_STATUS_OPTIONS, plantOperationalLabel } from '../../lib/operational';
+import { can, parsePowerKw, PLANT_STATUS_OPTIONS, plantOperationalLabel } from '../../lib/operational';
+import { formatDateTime, formatPowerKw } from '../../lib/format';
+import {
+  PLANT_STATE_FILTERS,
+  plantOperationalFilterLabel,
+  type OperationalIntegrationState,
+} from '../../lib/plant-integration-state';
+import type { DashboardOverview } from '../../lib/dashboard';
 
 type Customer = { id: string; name: string };
 type ConsumerUnitOption = {
@@ -72,6 +80,14 @@ function UsinasContent() {
   const [unitsByCustomer, setUnitsByCustomer] = useState<Record<string, ConsumerUnitOption[]>>({});
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [stateFilter, setStateFilter] = useState<string>('ALL');
+  const [opsByPlant, setOpsByPlant] = useState<Record<string, {
+    integrationState: OperationalIntegrationState;
+    currentPowerKw: number | null;
+    currentPowerHasData: boolean;
+    lastReadingAt: string | null;
+    openAlerts: number;
+  }>>({});
   const { open, editing, form, setForm, openCreate: startCreate, openEdit: startEdit, close, clearAfterSave } = useDraftModal<typeof emptyForm, Plant>(emptyForm);
   const [formError, setFormError] = useState('');
 
@@ -94,6 +110,22 @@ function UsinasContent() {
       ]);
       setRows(plants);
       setCustomers(customerRows);
+      try {
+        const overview = await fetchApi<DashboardOverview>('/monitoring/overview?period=today');
+        const map: typeof opsByPlant = {};
+        for (const plant of overview.dashboard.operationalPlants ?? overview.dashboard.recentPlants) {
+          map[plant.id] = {
+            integrationState: (plant.integrationState || 'NOT_CONFIGURED') as OperationalIntegrationState,
+            currentPowerKw: plant.currentPowerKw ?? null,
+            currentPowerHasData: Boolean(plant.currentPowerHasData),
+            lastReadingAt: plant.lastReadingAt ?? null,
+            openAlerts: plant.openAlerts ?? 0,
+          };
+        }
+        setOpsByPlant(map);
+      } catch {
+        setOpsByPlant({});
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Não foi possível carregar as usinas.');
     }
@@ -115,12 +147,17 @@ function UsinasContent() {
         plantDistributorDisplay(row),
         plantConsumerUnitDisplay(row),
       ].some((value) => value?.toLowerCase().includes(term));
-      return matchesCustomer && matchesSearch;
+      const state = opsByPlant[row.id]?.integrationState || 'NOT_CONFIGURED';
+      const matchesState = stateFilter === 'ALL' || state === stateFilter
+        || (stateFilter === 'NOT_CONFIGURED' && (state === 'NOT_CONFIGURED'));
+      return matchesCustomer && matchesSearch && matchesState;
     });
-  }, [rows, search, presetCustomer]);
+  }, [rows, search, presetCustomer, stateFilter, opsByPlant]);
 
   const availableUnits = unitsByCustomer[form.customerId] || [];
-  const hasEnergyUnits = availableUnits.length > 0;
+  const unitsLoaded = !form.customerId || Object.prototype.hasOwnProperty.call(unitsByCustomer, form.customerId);
+  const fieldMode = plantEnergyFieldMode(unitsLoaded, availableUnits.length);
+  const hasEnergyUnits = fieldMode === 'formal';
 
   function openCreate() {
     setFormError('');
@@ -171,6 +208,10 @@ function UsinasContent() {
       setFormError('Selecione o cliente.');
       return;
     }
+    if (fieldMode === 'loading') {
+      setFormError('Aguarde o carregamento das unidades consumidoras.');
+      return;
+    }
     if (!form.name.trim()) {
       setFormError('Informe o nome da usina.');
       return;
@@ -212,45 +253,112 @@ function UsinasContent() {
     await load();
   }
 
+  const emptyContent = search.trim() || stateFilter !== 'ALL' || presetCustomer
+    ? <EmptyState title="Nenhuma usina encontrada" description="Nenhum registro corresponde aos filtros atuais." />
+    : <EmptyState title="Nenhum registro encontrado" description="Cadastre uma usina vinculada a um cliente." />;
+
   return (
-    <div className="shell">
-      <PageHeader title="Usinas" description="Cadastro operacional das usinas fotovoltaicas." />
+    <div className="shell plants-page">
+      <PageHeader
+        eyebrow="Ativos"
+        title="Usinas"
+        description="Central operacional: quais usinas operam e quais precisam de atenção."
+        actions={can(user, 'PLANTS_CREATE') ? <Button type="button" onClick={openCreate}>Nova usina</Button> : null}
+      />
       {error ? <ErrorMessage message={error} /> : null}
       {!rows && !error ? <LoadingState message="Carregando usinas..." /> : null}
       {rows ? (
-        <section className="panel">
-          <div className="toolbar">
-            <TextField id="busca-usina" label="Buscar" value={search} onChange={setSearch} placeholder="Usina, cliente ou concessionária" />
-            {can(user, 'PLANTS_CREATE') ? <Button onClick={openCreate}>Nova usina</Button> : null}
+        <section className="plants-panel">
+          <div className="toolbar plants-toolbar">
+            <div className="toolbar-filters">
+              <TextField
+                id="busca-usina"
+                label="Buscar"
+                value={search}
+                onChange={setSearch}
+                placeholder="Usina, cliente ou concessionária"
+              />
+              <SelectField
+                id="filtro-estado"
+                label="Estado operacional"
+                value={stateFilter}
+                options={PLANT_STATE_FILTERS.map((item) => ({ value: item.value, label: item.label }))}
+                onChange={setStateFilter}
+              />
+            </div>
+            <p className="plants-count" aria-live="polite">
+              {filtered.length} de {rows.length} usina{rows.length === 1 ? '' : 's'}
+            </p>
           </div>
           <DataTable
             rows={filtered}
             rowKey={(row) => row.id}
             columns={[
-              { key: 'name', header: 'Nome da usina', render: (row) => <Link href={`/usinas/${row.id}`}>{row.name}</Link> },
-              { key: 'customer', header: 'Cliente', render: (row) => row.customer?.name || '—' },
-              { key: 'power', header: 'Potência instalada', render: (row) => formatPower(row.installedPowerKw) },
-              { key: 'distributor', header: 'Concessionária', render: (row) => plantDistributorDisplay(row) },
-              { key: 'uc', header: 'Unidade consumidora', render: (row) => plantConsumerUnitDisplay(row) },
-              { key: 'inverters', header: 'Inversores', render: (row) => row._count?.inverters ?? 0 },
-              { key: 'equipment', header: 'Equipamentos', render: (row) => row._count?.equipment ?? 0 },
-              { key: 'status', header: 'Status', render: (row) => <StatusBadge label={plantOperationalLabel(row.status)} status={row.status} /> },
+              {
+                key: 'name',
+                header: 'Nome da usina',
+                render: (row) => <Link className="plants-name-link" href={`/usinas/${row.id}`}>{row.name}</Link>,
+              },
+              { key: 'location', header: 'Localização', render: (row) => row.address || '—' },
+              {
+                key: 'integration',
+                header: 'Integração',
+                render: (row) => plantOperationalFilterLabel(opsByPlant[row.id]?.integrationState || 'NOT_CONFIGURED'),
+              },
+              {
+                key: 'powerNow',
+                header: 'Potência atual',
+                render: (row) => formatPowerKw(
+                  opsByPlant[row.id]?.currentPowerKw ?? null,
+                  Boolean(opsByPlant[row.id]?.currentPowerHasData),
+                ),
+              },
+              {
+                key: 'lastReading',
+                header: 'Última leitura',
+                render: (row) => (opsByPlant[row.id]?.lastReadingAt
+                  ? formatDateTime(opsByPlant[row.id].lastReadingAt!)
+                  : 'Sem dados de monitoramento'),
+              },
+              {
+                key: 'alerts',
+                header: 'Alertas',
+                render: (row) => (opsByPlant[row.id] ? String(opsByPlant[row.id].openAlerts) : '—'),
+              },
+              {
+                key: 'status',
+                header: 'Cadastro',
+                render: (row) => <StatusBadge label={plantOperationalLabel(row.status)} status={row.status} />,
+              },
               {
                 key: 'actions',
                 header: 'Ações',
                 render: (row) => (
                   <div className="actions-cell">
-                    {can(user, 'PLANTS_UPDATE') ? <Button variant="secondary" onClick={() => openEdit(row)}>Editar</Button> : null}
-                    {can(user, 'PLANTS_UPDATE') ? <Button variant="ghost" onClick={() => void toggleStatus(row)}>{row.status === 'ACTIVE' ? 'Inativar' : 'Ativar'}</Button> : null}
+                    {can(user, 'PLANTS_UPDATE') ? (
+                      <Button type="button" variant="secondary" onClick={() => openEdit(row)}>Editar</Button>
+                    ) : null}
+                    {can(user, 'PLANTS_UPDATE') ? (
+                      <Button type="button" variant="ghost" onClick={() => void toggleStatus(row)}>
+                        {row.status === 'ACTIVE' ? 'Inativar' : 'Ativar'}
+                      </Button>
+                    ) : null}
                   </div>
                 ),
               },
             ]}
-            empty={<EmptyState title="Nenhum registro encontrado" description="Cadastre uma usina vinculada a um cliente." />}
+            empty={emptyContent}
           />
         </section>
       ) : null}
-      <Modal open={open} title={editing ? 'Editar usina' : 'Nova usina'} error={formError} onClose={close} onConfirm={() => void save()}>
+      <Modal
+        open={open}
+        title={editing ? 'Editar usina' : 'Nova usina'}
+        error={formError}
+        confirmDisabled={fieldMode === 'loading'}
+        onClose={close}
+        onConfirm={() => void save()}
+      >
         <div className="form-grid">
           <SelectField
             id="cliente"
@@ -260,7 +368,9 @@ function UsinasContent() {
             placeholder="Selecione o cliente"
             onChange={changeCustomer}
           />
-          {hasEnergyUnits ? (
+          {fieldMode === 'loading' ? (
+            <p className="plants-muted">Carregando unidades consumidoras...</p>
+          ) : hasEnergyUnits ? (
             <>
               <SelectField
                 id="uc-vinculo"
@@ -269,19 +379,52 @@ function UsinasContent() {
                 options={availableUnits.map((unit) => ({ value: unit.id, label: consumerUnitLabel(unit) }))}
                 placeholder="Selecione a unidade consumidora"
                 onChange={changeUnit}
+                hint="Vínculo formal com ConsumerUnit."
               />
-              <TextField id="concessionaria" label="Distribuidora" value={form.distributor} disabled onChange={() => undefined} />
+              <TextField
+                id="concessionaria"
+                label="Distribuidora"
+                value={form.distributor}
+                disabled
+                onChange={() => undefined}
+                hint="Derivada da unidade consumidora formal."
+              />
             </>
           ) : (
             <>
-              <TextField id="concessionaria" label="Concessionária" value={form.distributor} onChange={(distributor) => setForm({ ...form, distributor })} />
-              <TextField id="uc" label="Unidade consumidora" value={form.consumerUnit} onChange={(consumerUnit) => setForm({ ...form, consumerUnit })} />
+              <TextField
+                id="concessionaria"
+                label="Concessionária"
+                value={form.distributor}
+                onChange={(distributor) => setForm({ ...form, distributor })}
+                hint="Campo legado quando o cliente ainda não possui UC formal."
+              />
+              <TextField
+                id="uc"
+                label="Unidade consumidora"
+                value={form.consumerUnit}
+                onChange={(consumerUnit) => setForm({ ...form, consumerUnit })}
+                hint="Referência legada (Plant.consumerUnit) — não é ConsumerUnit formal."
+              />
             </>
           )}
           <TextField id="nome-usina" label="Nome da usina" value={form.name} onChange={(name) => setForm({ ...form, name })} />
-          <TextField id="potencia" label="Potência instalada (kW)" value={form.installedPowerKw} onChange={(installedPowerKw) => setForm({ ...form, installedPowerKw })} />
+          <TextField
+            id="potencia"
+            label="Potência instalada (kW)"
+            value={form.installedPowerKw}
+            onChange={(installedPowerKw) => setForm({ ...form, installedPowerKw })}
+          />
           <TextField id="endereco" label="Endereço" value={form.address} onChange={(address) => setForm({ ...form, address })} />
-          {!editing ? <SelectField id="status-usina" label="Status" value={form.status} options={PLANT_STATUS_OPTIONS} onChange={(status) => setForm({ ...form, status })} /> : null}
+          {!editing ? (
+            <SelectField
+              id="status-usina"
+              label="Status"
+              value={form.status}
+              options={PLANT_STATUS_OPTIONS}
+              onChange={(status) => setForm({ ...form, status })}
+            />
+          ) : null}
         </div>
       </Modal>
     </div>

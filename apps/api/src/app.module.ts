@@ -15,6 +15,7 @@ import { RateLimitModule } from './modules/auth/rate-limit.module';
 import { DistributorsModule } from './modules/distributors/distributors.module';
 import { ConsumersModule } from './modules/consumers/consumers.module';
 import { ConsumerUnitsModule } from './modules/consumer-units/consumer-units.module';
+import { EnergyModule } from './modules/energy/energy.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ConsumerUnitsModule } from './modules/consumer-units/consumer-units.mod
     DistributorsModule,
     ConsumersModule,
     ConsumerUnitsModule,
+    EnergyModule,
   ],
 })
 export class AppModule {}

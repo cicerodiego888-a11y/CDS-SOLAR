@@ -1,0 +1,699 @@
+﻿{
+  integration: 'auxsol',
+  operation: 'auth',
+  endpoint: '/auth/token',
+  status: 'start'
+}
+{
+  integration: 'auxsol',
+  operation: 'http',
+  endpoint: '/auth/token',
+  httpStatus: 200,
+  auxsolCode: 'AWX-0000',
+  envelopeKeys: 'code,msg,data',
+  dataKind: 'object',
+  durationMs: 1713
+}
+{
+  integration: 'auxsol',
+  operation: 'auth',
+  endpoint: '/auth/token',
+  status: 'success',
+  httpStatus: 200,
+  auxsolCode: 'AWX-0000',
+  authenticated: true,
+  expiresIn: 43200,
+  durationMs: 1714
+}
+{
+  integration: 'auxsol',
+  operation: 'testConnection',
+  status: 'success',
+  mode: 'live',
+  durationMs: 1714
+}
+{
+  integration: 'auxsol',
+  operation: 'http',
+  endpoint: '/archive/plant/list?current=1&size=100',
+  httpStatus: 200,
+  auxsolCode: 'AWX-0000',
+  envelopeKeys: 'code,msg,data',
+  dataKind: 'object',
+  durationMs: 195
+}
+{
+  integration: 'auxsol',
+  operation: 'plantList',
+  endpoint: '/archive/plant/list?current=1&size=100',
+  status: 'success',
+  httpStatus: 200,
+  durationMs: 195
+}
+{
+  integration: 'auxsol',
+  operation: 'http',
+  endpoint: '/archive/inverter/getInverterByPlant/144912',
+  httpStatus: 200,
+  auxsolCode: 'AWX-0000',
+  envelopeKeys: 'code,msg,data',
+  dataKind: 'array',
+  durationMs: 204
+}
+{
+  integration: 'auxsol',
+  operation: 'invertersByPlant',
+  endpoint: '/archive/inverter/getInverterByPlant/144912',
+  status: 'success',
+  httpStatus: 200,
+  durationMs: 205
+}
+{
+  integration: 'auxsol',
+  operation: 'http',
+  endpoint: '/archive/inverter/getInverterByPlant/136653',
+  httpStatus: 200,
+  auxsolCode: 'AWX-0000',
+  envelopeKeys: 'code,msg,data',
+  dataKind: 'array',
+  durationMs: 204
+}
+{
+  integration: 'auxsol',
+  operation: 'invertersByPlant',
+  endpoint: '/archive/inverter/getInverterByPlant/136653',
+  status: 'success',
+  httpStatus: 200,
+  durationMs: 205
+}
+{
+  integration: 'auxsol',
+  operation: 'http',
+  endpoint: '/archive/inverter/getInverterByPlant/135108',
+  httpStatus: 200,
+  auxsolCode: 'AWX-0000',
+  envelopeKeys: 'code,msg,data',
+  dataKind: 'array',
+  durationMs: 218
+}
+{
+  integration: 'auxsol',
+  operation: 'invertersByPlant',
+  endpoint: '/archive/inverter/getInverterByPlant/135108',
+  status: 'success',
+  httpStatus: 200,
+  durationMs: 218
+}
+{
+  integration: 'auxsol',
+  operation: 'http',
+  endpoint: '/archive/inverter/getInverterByPlant/133043',
+  httpStatus: 200,
+  auxsolCode: 'AWX-0000',
+  envelopeKeys: 'code,msg,data',
+  dataKind: 'array',
+  durationMs: 253
+}
+{
+  integration: 'auxsol',
+  operation: 'invertersByPlant',
+  endpoint: '/archive/inverter/getInverterByPlant/133043',
+  status: 'success',
+  httpStatus: 200,
+  durationMs: 253
+}
+{
+  integration: 'auxsol',
+  operation: 'http',
+  endpoint: '/archive/inverter/getInverterByPlant/105356',
+  httpStatus: 200,
+  auxsolCode: 'AWX-0000',
+  envelopeKeys: 'code,msg,data',
+  dataKind: 'array',
+  durationMs: 346
+}
+{
+  integration: 'auxsol',
+  operation: 'invertersByPlant',
+  endpoint: '/archive/inverter/getInverterByPlant/105356',
+  status: 'success',
+  httpStatus: 200,
+  durationMs: 346
+}
+{
+  integration: 'auxsol',
+  operation: 'http',
+  endpoint: '/archive/inverter/getInverterByPlant/102545',
+  httpStatus: 200,
+  auxsolCode: 'AWX-0000',
+  envelopeKeys: 'code,msg,data',
+  dataKind: 'array',
+  durationMs: 260
+}
+{
+  integration: 'auxsol',
+  operation: 'invertersByPlant',
+  endpoint: '/archive/inverter/getInverterByPlant/102545',
+  status: 'success',
+  httpStatus: 200,
+  durationMs: 260
+}
+{
+  integration: 'auxsol',
+  operation: 'http',
+  endpoint: '/archive/inverter/getInverterByPlant/96505',
+  httpStatus: 200,
+  auxsolCode: 'AWX-0000',
+  envelopeKeys: 'code,msg,data',
+  dataKind: 'array',
+  durationMs: 202
+}
+{
+  integration: 'auxsol',
+  operation: 'invertersByPlant',
+  endpoint: '/archive/inverter/getInverterByPlant/96505',
+  status: 'success',
+  httpStatus: 200,
+  durationMs: 203
+}
+{
+  integration: 'auxsol',
+  operation: 'http',
+  endpoint: '/archive/inverter/getInverterByPlant/92799',
+  httpStatus: 200,
+  auxsolCode: 'AWX-0000',
+  envelopeKeys: 'code,msg,data',
+  dataKind: 'array',
+  durationMs: 265
+}
+{
+  integration: 'auxsol',
+  operation: 'invertersByPlant',
+  endpoint: '/archive/inverter/getInverterByPlant/92799',
+  status: 'success',
+  httpStatus: 200,
+  durationMs: 266
+}
+{
+  integration: 'auxsol',
+  operation: 'http',
+  endpoint: '/archive/inverter/getInverterByPlant/90079',
+  httpStatus: 200,
+  auxsolCode: 'AWX-0000',
+  envelopeKeys: 'code,msg,data',
+  dataKind: 'array',
+  durationMs: 243
+}
+{
+  integration: 'auxsol',
+  operation: 'invertersByPlant',
+  endpoint: '/archive/inverter/getInverterByPlant/90079',
+  status: 'success',
+  httpStatus: 200,
+  durationMs: 244
+}
+{
+  integration: 'auxsol',
+  operation: 'http',
+  endpoint: '/archive/inverter/getInverterByPlant/89858',
+  httpStatus: 200,
+  auxsolCode: 'AWX-0000',
+  envelopeKeys: 'code,msg,data',
+  dataKind: 'array',
+  durationMs: 204
+}
+{
+  integration: 'auxsol',
+  operation: 'invertersByPlant',
+  endpoint: '/archive/inverter/getInverterByPlant/89858',
+  status: 'success',
+  httpStatus: 200,
+  durationMs: 204
+}
+{
+  integration: 'auxsol',
+  operation: 'http',
+  endpoint: '/analysis/inverterReport/findInverterRealTimeInfoBySn/ASN-10SL251016000352',
+  httpStatus: 200,
+  auxsolCode: 'AWX-0000',
+  envelopeKeys: 'code,msg,data',
+  dataKind: 'object',
+  durationMs: 205
+}
+{
+  integration: 'auxsol',
+  operation: 'realtimeBySn',
+  endpoint: '/analysis/inverterReport/findInverterRealTimeInfoBySn/ASN-10SL251016000352',
+  status: 'success',
+  httpStatus: 200,
+  durationMs: 205
+}
+{
+  "sprint": "VERIFICAÇÃO DE ACESSO AUXSOL — APP_ID 39502",
+  "scope": "diagnóstico somente leitura (auth + GET)",
+  "timestamp": "2026-11-08T01:35:57.652Z",
+  "appIdObserved": "39502",
+  "appIdExpected": "39502",
+  "appIdMatch": true,
+  "baseUrlConfigured": true,
+  "appSecretConfiguredViaEnv": true,
+  "mock": "OFF",
+  "persist": "OFF",
+  "mode": "live",
+  "mutationsExecuted": {
+    "auxsolPostPutPatchDeleteExceptAuth": false,
+    "plantCreateEditDelete": false,
+    "loggerBindUnbind": false,
+    "inverterOrGatewayChange": false,
+    "localBindingUpsert": false,
+    "readingPersistence": false
+  },
+  "authentication": {
+    "result": "OK",
+    "httpStatus": 200,
+    "auxsolCode": "AWX-0000",
+    "expiresIn": 43200,
+    "mode": "live",
+    "note": "Token obtido; valor do token não é exibido."
+  },
+  "plants": {
+    "httpStatus": 200,
+    "auxsolCode": "AWX-0000",
+    "count": 10,
+    "items": [
+      {
+        "plantId": 144912,
+        "plantName": "Gilberto Rodrigues ",
+        "capacity": 7,
+        "status": "02",
+        "address": "2,Rua Praia Dourada,Nossa Senhora da Vitória"
+      },
+      {
+        "plantId": 136653,
+        "plantName": "Marcos Messias",
+        "capacity": 4,
+        "status": "02",
+        "address": "200a,Travessa Oitavo,Esperança"
+      },
+      {
+        "plantId": 135108,
+        "plantName": "Thamillis Vitória ",
+        "capacity": 4,
+        "status": "02",
+        "address": "350,Rua Severino Viêira,Malhado"
+      },
+      {
+        "plantId": 133043,
+        "plantName": "Marcelo Borges ",
+        "capacity": 12,
+        "status": "02",
+        "address": "121,Rua Felisbelo Gomes Dos Santos,Pontal"
+      },
+      {
+        "plantId": 105356,
+        "plantName": "UsinaReis(Guest)",
+        "capacity": 7.8,
+        "status": "02",
+        "address": "641"
+      },
+      {
+        "plantId": 102545,
+        "plantName": "ULISSESLIMA",
+        "capacity": 10,
+        "status": "02",
+        "address": "Fazenda"
+      },
+      {
+        "plantId": 96505,
+        "plantName": "tahecio Carvalho ",
+        "capacity": 18.9,
+        "status": "02",
+        "address": "Água Fria"
+      },
+      {
+        "plantId": 92799,
+        "plantName": "Edenir santos ",
+        "capacity": 4.34,
+        "status": "02",
+        "address": "Sambaituba"
+      },
+      {
+        "plantId": 90079,
+        "plantName": "Thalys Encarnação ",
+        "capacity": 11.3,
+        "status": "02",
+        "address": "salobrinho "
+      },
+      {
+        "plantId": 89858,
+        "plantName": "Milton Sampaio ",
+        "capacity": 10.5,
+        "status": "02",
+        "address": "Travessa Matosa II"
+      }
+    ]
+  },
+  "inverters": {
+    "totalCount": 10,
+    "uniqueSerialCount": 10,
+    "httpEvidenceSample": [
+      {
+        "plantId": 144912,
+        "httpStatus": 200,
+        "auxsolCode": "AWX-0000"
+      },
+      {
+        "plantId": 136653,
+        "httpStatus": 200,
+        "auxsolCode": "AWX-0000"
+      },
+      {
+        "plantId": 135108,
+        "httpStatus": 200,
+        "auxsolCode": "AWX-0000"
+      },
+      {
+        "plantId": 133043,
+        "httpStatus": 200,
+        "auxsolCode": "AWX-0000"
+      },
+      {
+        "plantId": 105356,
+        "httpStatus": 200,
+        "auxsolCode": "AWX-0000"
+      }
+    ],
+    "byPlant": [
+      {
+        "plantId": 144912,
+        "plantName": "Gilberto Rodrigues ",
+        "httpStatus": 200,
+        "auxsolCode": "AWX-0000",
+        "count": 1,
+        "inverters": [
+          {
+            "inverterId": 1234568337198556,
+            "sn": "ASN-6SL-G2260310002616",
+            "model": "ASN-6SL-G2",
+            "ratedPower": null,
+            "gateway": null
+          }
+        ]
+      },
+      {
+        "plantId": 136653,
+        "plantName": "Marcos Messias",
+        "httpStatus": 200,
+        "auxsolCode": "AWX-0000",
+        "count": 1,
+        "inverters": [
+          {
+            "inverterId": 1234568293428925,
+            "sn": "ASN-3SL260310000837",
+            "model": "ASN-3SL",
+            "ratedPower": null,
+            "gateway": null
+          }
+        ]
+      },
+      {
+        "plantId": 135108,
+        "plantName": "Thamillis Vitória ",
+        "httpStatus": 200,
+        "auxsolCode": "AWX-0000",
+        "count": 1,
+        "inverters": [
+          {
+            "inverterId": 1234568282092681,
+            "sn": "ASN-4SL-G2260307000073",
+            "model": "ASN-4SL-G2",
+            "ratedPower": null,
+            "gateway": null
+          }
+        ]
+      },
+      {
+        "plantId": 133043,
+        "plantName": "Marcelo Borges ",
+        "httpStatus": 200,
+        "auxsolCode": "AWX-0000",
+        "count": 1,
+        "inverters": [
+          {
+            "inverterId": 1234568271014171,
+            "sn": "ASN-7.5SL-G2-PRO251210001979",
+            "model": "ASN-7.5SL-G2-PRO",
+            "ratedPower": null,
+            "gateway": null
+          }
+        ]
+      },
+      {
+        "plantId": 105356,
+        "plantName": "UsinaReis(Guest)",
+        "httpStatus": 200,
+        "auxsolCode": "AWX-0000",
+        "count": 1,
+        "inverters": [
+          {
+            "inverterId": 1234568146040906,
+            "sn": "ASN-7.5SL251101001356",
+            "model": "ASN-7.5SL",
+            "ratedPower": null,
+            "gateway": null
+          }
+        ]
+      },
+      {
+        "plantId": 102545,
+        "plantName": "ULISSESLIMA",
+        "httpStatus": 200,
+        "auxsolCode": "AWX-0000",
+        "count": 1,
+        "inverters": [
+          {
+            "inverterId": 1234568136545421,
+            "sn": "ASN-10SL251016000352",
+            "model": "ASN-10SL",
+            "ratedPower": null,
+            "gateway": null
+          }
+        ]
+      },
+      {
+        "plantId": 96505,
+        "plantName": "tahecio Carvalho ",
+        "httpStatus": 200,
+        "auxsolCode": "AWX-0000",
+        "count": 1,
+        "inverters": [
+          {
+            "inverterId": 1234568117011273,
+            "sn": "ASN-10SL251016000397",
+            "model": "ASN-10SL",
+            "ratedPower": null,
+            "gateway": null
+          }
+        ]
+      },
+      {
+        "plantId": 92799,
+        "plantName": "Edenir santos ",
+        "httpStatus": 200,
+        "auxsolCode": "AWX-0000",
+        "count": 1,
+        "inverters": [
+          {
+            "inverterId": 1234568105137834,
+            "sn": "ASN-4SL-G2251016000261",
+            "model": "ASN-4SL-G2",
+            "ratedPower": null,
+            "gateway": null
+          }
+        ]
+      },
+      {
+        "plantId": 90079,
+        "plantName": "Thalys Encarnação ",
+        "httpStatus": 200,
+        "auxsolCode": "AWX-0000",
+        "count": 1,
+        "inverters": [
+          {
+            "inverterId": 1234568097358284,
+            "sn": "ASN-6SL-G22507160280",
+            "model": "ASN-6SL-G2",
+            "ratedPower": null,
+            "gateway": null
+          }
+        ]
+      },
+      {
+        "plantId": 89858,
+        "plantName": "Milton Sampaio ",
+        "httpStatus": 200,
+        "auxsolCode": "AWX-0000",
+        "count": 1,
+        "inverters": [
+          {
+            "inverterId": 1234568096627751,
+            "sn": "ASN-6SL-G22507160137",
+            "model": "ASN-6SL-G2",
+            "ratedPower": null,
+            "gateway": null
+          }
+        ]
+      }
+    ],
+    "allSerialsVisible": [
+      "ASN-6SL-G2260310002616",
+      "ASN-3SL260310000837",
+      "ASN-4SL-G2260307000073",
+      "ASN-7.5SL-G2-PRO251210001979",
+      "ASN-7.5SL251101001356",
+      "ASN-10SL251016000352",
+      "ASN-10SL251016000397",
+      "ASN-4SL-G2251016000261",
+      "ASN-6SL-G22507160280",
+      "ASN-6SL-G22507160137"
+    ]
+  },
+  "targetResults": {
+    "JOSE": {
+      "label": "José",
+      "sn": "ASN-10SL2508230101",
+      "foundInListing": false,
+      "diagnosis": "APP_ID não recebeu este SN na listagem",
+      "realtime": {
+        "executed": false,
+        "reason": "SN_AUSENTE_NA_LISTAGEM"
+      }
+    },
+    "ULISSES": {
+      "label": "Ulisses",
+      "sn": "ASN-10SL251016000352",
+      "foundInListing": true,
+      "identification": {
+        "plantId": 102545,
+        "plantName": "ULISSESLIMA",
+        "inverterId": 1234568136545421,
+        "sn": "ASN-10SL251016000352",
+        "model": "ASN-10SL",
+        "gateway": null
+      },
+      "availability": {
+        "dataPresent": true,
+        "dataKind": "object",
+        "lastCommTime": "2026-11-08T04:29:39.636+08:00",
+        "alarmCurrent": {
+          "mainFaultCode": 0,
+          "faultCode": 0,
+          "mainAlarmCode": 0,
+          "alarmCode": 0,
+          "lastAlarm": null,
+          "alarmCount": 0,
+          "alarmCode0": null,
+          "alarmCode1": null,
+          "faultCode0": null,
+          "faultCode1": null,
+          "faultCode2": null,
+          "faultCode3": null
+        }
+      },
+      "generation": {
+        "power": 0,
+        "energyToday": 69.32,
+        "energyMonth": 457.53,
+        "energyTotal": 5768.11,
+        "dt": "2026-11-07 17:29:39",
+        "valuesAvailable": true
+      },
+      "realtime": {
+        "executed": true,
+        "httpStatus": 200,
+        "auxsolCode": "AWX-0000",
+        "payloadKeys": [
+          "code",
+          "msg",
+          "data"
+        ],
+        "dataKeys": [
+          "id",
+          "sn",
+          "dt",
+          "deptId",
+          "history",
+          "currency",
+          "moneyType",
+          "price",
+          "priceType",
+          "timeUsePrice",
+          "phase",
+          "ratedPower",
+          "type",
+          "status",
+          "lastDay",
+          "lastCommTime",
+          "lastDeviceCommTime",
+          "energyData",
+          "batteryData",
+          "gridData",
+          "loadData",
+          "version",
+          "generatorDate",
+          "bmsData",
+          "alarmCurrent",
+          "otherData",
+          "dynamicPrice",
+          "dynamicBuyPrice",
+          "inverterMesData",
+          "hemsEn",
+          "timeZone",
+          "source",
+          "alarmCurrentList",
+          "isKSD320",
+          "pid",
+          "alarm",
+          "default_PHASE"
+        ],
+        "sanitizedEnvelope": {
+          "code": "AWX-0000",
+          "msg": null,
+          "dataKind": "object",
+          "dataPresent": true
+        }
+      }
+    }
+  },
+  "httpEvidence": {
+    "authentication": {
+      "result": "OK",
+      "httpStatus": 200,
+      "auxsolCode": "AWX-0000",
+      "expiresIn": 43200,
+      "mode": "live",
+      "note": "Token obtido; valor do token não é exibido."
+    },
+    "plantList": {
+      "httpStatus": 200,
+      "auxsolCode": "AWX-0000"
+    },
+    "inverterListCalls": 10,
+    "inverterListHttpStatuses": [
+      200
+    ],
+    "inverterListAuxsolCodes": [
+      "AWX-0000"
+    ]
+  },
+  "FINAL_DIAGNOSIS": "PARCIALMENTE LIBERADO",
+  "confirmation": {
+    "noConfigOrCadastroChanged": true,
+    "onlyAuthPostAndDocumentedGets": true,
+    "bindingNotExecuted": true,
+    "persistenceNotExecuted": true
+  },
+  "secretLeakedInLogs": false,
+  "tokenLeakedInLogs": false,
+  "reportFile": "C:\\Users\\cicer\\Desktop\\B7 Solar\\B7-Solar-Platform-exe\\apps\\api\\reports\\auxsol-access-diagnostic-1794101762182.json"
+}

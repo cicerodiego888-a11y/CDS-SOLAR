@@ -21,6 +21,8 @@ const NON_RETRYABLE: CollectionErrorCode[] = [
   'INTEGRATION_NOT_CONFIGURED',
   'INTEGRATION_NOT_SUPPORTED',
   'INVALID_READING',
+  // Conflito transitório de lock: não retentar nesta execução; próximo tick agenda nova coleta.
+  'CONCURRENT_COLLECTION',
 ];
 
 @Injectable()

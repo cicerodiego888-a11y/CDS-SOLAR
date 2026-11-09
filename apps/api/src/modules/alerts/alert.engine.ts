@@ -9,6 +9,7 @@ import {
   alertFingerprint,
 } from './alert.constants';
 import { AlertDecision, AlertEvaluationContext, IntegrationCollectability, MonitoringAlertRule } from './alert.types';
+import { selectLastObservationAt } from './last-observation-at';
 import { GenerationAnomalyRule } from './rules/generation-anomaly.rule';
 import { NoRecentReadingRule } from './rules/no-recent-reading.rule';
 import { InverterErrorRule, InverterOfflineRule, InverterWarningRule } from './rules/status.rules';
@@ -61,6 +62,16 @@ export class MonitoringAlertService {
     const results = [];
     for (const inverter of inverters) {
       const collectability = this.resolveCollectability(inverter);
+      const manufacturer = inverter.manufacturerRef?.code ?? inverter.manufacturer;
+      const binding = inverter.bindings.find((item) => item.provider === manufacturer);
+      const persistedLastReadingAt = inverter.readings[0]?.collectedAt ?? null;
+      // Mais recente válido entre persistido e lastSyncAt do mesmo inversor/binding.
+      const lastReadingAt = selectLastObservationAt({
+        inverterId: inverter.id,
+        bindingId: binding?.id,
+        persistedCollectedAt: persistedLastReadingAt,
+        bindingLastSyncAt: binding?.lastSyncAt ?? null,
+      });
       results.push(...await this.evaluateAbsence({
         inverterId: inverter.id,
         inverterName: inverter.model,
@@ -68,9 +79,10 @@ export class MonitoringAlertService {
         plantName: inverter.plant.name,
         customerId: inverter.plant.customerId,
         customerName: inverter.plant.customer?.name,
-        lastReadingAt: inverter.readings[0]?.collectedAt ?? null,
+        lastReadingAt,
+        persistedLastReadingAt,
         collectability,
-        provider: inverter.manufacturerRef?.code ?? inverter.manufacturer,
+        provider: manufacturer,
       }));
     }
     return results;

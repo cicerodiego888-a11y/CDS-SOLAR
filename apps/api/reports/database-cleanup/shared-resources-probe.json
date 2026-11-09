@@ -1,0 +1,95 @@
+{
+  "sprintCustomers": [
+    {
+      "id": "cmuigi1bn0003tyagp4m522ja",
+      "name": "SPRINT5 CERT OUTRO CONSUMER",
+      "consumerId": "cmuigi1er0005tyago8coz4vt"
+    },
+    {
+      "id": "cmuigi2as000styag2oa5xo2p",
+      "name": "SPRINT5 CERT VIA COMERCIAL",
+      "consumerId": null
+    },
+    {
+      "id": "cmuigi1b80002tyagumh96ecs",
+      "name": "SPRINT5 CERT SEM CONSUMER",
+      "consumerId": "cmuigo2t0000ztyag6z6y88nq"
+    },
+    {
+      "id": "cmuigi19j0001tyagat7gu92i",
+      "name": "SPRINT5 CERT TESTE EDITADO",
+      "consumerId": "cmuigi1cn0004tyag0lwex26a"
+    }
+  ],
+  "consumersLinkedToSprintCustomers": [
+    {
+      "id": "cmuigi1cn0004tyag0lwex26a",
+      "name": "Titular SPRINT5 CERT EDITADO",
+      "document": "43118664703",
+      "documentType": "CPF",
+      "email": "titular.1790431186647@b7.invalid",
+      "phone": "85988880077",
+      "status": "ACTIVE",
+      "createdAt": "2026-09-26T13:59:46.776Z",
+      "updatedAt": "2026-09-26T14:02:56.436Z"
+    },
+    {
+      "id": "cmuigi1er0005tyago8coz4vt",
+      "name": "Outro titular SPRINT5",
+      "document": "43118666404",
+      "documentType": "CPF",
+      "email": null,
+      "phone": null,
+      "status": "ACTIVE",
+      "createdAt": "2026-09-26T13:59:46.851Z",
+      "updatedAt": "2026-09-26T13:59:46.851Z"
+    },
+    {
+      "id": "cmuigo2t0000ztyag6z6y88nq",
+      "name": "Titular SPRINT5 SEM CONSUMER",
+      "document": "39053344705",
+      "documentType": "CPF",
+      "email": null,
+      "phone": null,
+      "status": "ACTIVE",
+      "createdAt": "2026-09-26T14:04:28.597Z",
+      "updatedAt": "2026-09-26T14:04:28.597Z"
+    }
+  ],
+  "consumerUnitsLikelySprint": [
+    {
+      "id": "cmuigjr7x000wtyagx9xrhz8h",
+      "number": "910000111003",
+      "distributor": "SPRINT5 CERT DISTRIBUIDORA",
+      "consumerName": "Outro titular SPRINT5"
+    },
+    {
+      "id": "cmuigjr78000utyagzqr3k5go",
+      "number": "910000111002",
+      "distributor": "SPRINT5 CERT DISTRIBUIDORA",
+      "consumerName": "Titular SPRINT5 CERT EDITADO"
+    },
+    {
+      "id": "cmuign4iz000ytyag59uueko6",
+      "number": "910000111004",
+      "distributor": "SPRINT5 CERT DISTRIBUIDORA",
+      "consumerName": "Titular SPRINT5 CERT EDITADO"
+    }
+  ],
+  "allDistributors": [
+    {
+      "id": "cmuigi18h0000tyag1xrjnyei",
+      "name": "S5186614",
+      "display": "SPRINT5 CERT DISTRIBUIDORA"
+    }
+  ],
+  "users": [
+    {
+      "id": "cmtmagbmb0001tyzwpqzkahx3",
+      "email": "admin@b7solar.local",
+      "role": "ADMIN",
+      "customerId": null
+    }
+  ],
+  "note": "Consumer/UC/Distributor NÃO entram no DELETE automático de Customer sem aprovação explícita extra."
+}

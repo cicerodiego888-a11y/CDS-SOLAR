@@ -1,4 +1,6 @@
 import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { JwtPayload } from '../auth/auth.types';
+import { CurrentUser } from '../auth/current-user.decorator';
 import { Permissions } from '../auth/permissions.decorator';
 import {
   CreateCustomerConsumerDto,
@@ -32,8 +34,8 @@ export class CustomersController {
 
   @Permissions('CUSTOMERS_VIEW')
   @Get(':id/consumer-units')
-  listConsumerUnits(@Param('id') id: string) {
-    return this.units.listByCustomer(id);
+  listConsumerUnits(@Param('id') id: string, @CurrentUser() user: JwtPayload) {
+    return this.units.listByCustomer(id, user);
   }
 
   @Permissions('CUSTOMERS_VIEW')
@@ -52,8 +54,12 @@ export class CustomersController {
 
   @Permissions('CUSTOMERS_UPDATE')
   @Post(':id/consumer-units')
-  createConsumerUnit(@Param('id') id: string, @Body() dto: CreateCustomerConsumerUnitDto) {
-    return this.units.createForCustomer(id, dto);
+  createConsumerUnit(
+    @Param('id') id: string,
+    @Body() dto: CreateCustomerConsumerUnitDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.units.createForCustomer(id, dto, user);
   }
 
   @Permissions('CUSTOMERS_UPDATE')

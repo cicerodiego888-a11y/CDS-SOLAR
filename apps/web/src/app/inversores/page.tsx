@@ -136,31 +136,51 @@ function InversoresContent() {
     await load();
   }
 
+  const hasActiveFilter = Boolean(filters.plantId || filters.manufacturerId || filters.status || filters.search.trim());
+  const emptyContent = hasActiveFilter
+    ? <EmptyState title="Nenhum inversor encontrado" description="Nenhum registro corresponde aos filtros atuais." />
+    : <EmptyState title="Nenhum registro encontrado" description="Cadastre um inversor vinculado a uma usina e a um fabricante oficial." />;
+
   return (
-    <div className="shell">
-      <PageHeader title="Inversores" description="Cadastro operacional vinculado ao catálogo oficial de fabricantes." />
+    <div className="shell inverters-page">
+      <PageHeader
+        eyebrow="Ativos"
+        title="Inversores"
+        description="Cadastro operacional vinculado ao catálogo oficial de fabricantes."
+        actions={can(user, 'INVERTERS_CREATE') ? <Button type="button" onClick={openCreate}>Novo inversor</Button> : null}
+      />
       {error ? <ErrorMessage message={error} /> : null}
       {!rows && !error ? <LoadingState message="Carregando inversores..." /> : null}
       {rows ? (
-        <section className="panel">
-          <div className="toolbar">
+        <section className="inverters-panel">
+          <div className="toolbar inverters-toolbar">
             <div className="toolbar-filters">
+              <TextField id="busca-inv" label="Buscar" value={filters.search} onChange={(search) => setFilters({ ...filters, search })} placeholder="Modelo ou série" />
               <SelectField id="filtro-usina" label="Usina" value={filters.plantId} options={plants.map((item) => ({ value: item.id, label: item.name }))} placeholder="Todas" onChange={(plantId) => setFilters({ ...filters, plantId })} />
               <SelectField id="filtro-fab" label="Fabricante" value={filters.manufacturerId} options={manufacturers.map((item) => ({ value: item.id, label: item.name }))} placeholder="Todos" onChange={(manufacturerId) => setFilters({ ...filters, manufacturerId })} />
               <SelectField id="filtro-status" label="Status" value={filters.status} options={RECORD_STATUS_OPTIONS} placeholder="Todos" onChange={(status) => setFilters({ ...filters, status })} />
-              <TextField id="busca-inv" label="Buscar" value={filters.search} onChange={(search) => setFilters({ ...filters, search })} placeholder="Modelo ou série" />
             </div>
-            {can(user, 'INVERTERS_CREATE') ? <Button onClick={openCreate}>Novo inversor</Button> : null}
+            <p className="inverters-count" aria-live="polite">
+              {rows.length} inversor{rows.length === 1 ? '' : 'es'}
+            </p>
           </div>
           <DataTable
             rows={rows}
             rowKey={(row) => row.id}
             columns={[
-              { key: 'name', header: 'Inversor', render: (row) => <Link href={`/inversores/${row.id}`}>{row.model || 'Inversor'}</Link> },
+              {
+                key: 'name',
+                header: 'Inversor',
+                render: (row) => <Link className="inverters-name-link" href={`/inversores/${row.id}`}>{row.model || 'Inversor'}</Link>,
+              },
               { key: 'plant', header: 'Usina', render: (row) => row.plant?.name || '—' },
               { key: 'manufacturer', header: 'Fabricante', render: (row) => row.manufacturerRef?.name || '—' },
               { key: 'model', header: 'Modelo', render: (row) => row.model || '—' },
-              { key: 'serial', header: 'Número de série', render: (row) => row.serialNumber || '—' },
+              {
+                key: 'serial',
+                header: 'Número de série',
+                render: (row) => (row.serialNumber ? <code className="inverters-serial">{row.serialNumber}</code> : '—'),
+              },
               { key: 'power', header: 'Potência', render: (row) => formatPower(row.ratedPowerKw) },
               { key: 'status', header: 'Status', render: (row) => <StatusBadge label={recordStatusLabel(row.status)} status={row.status} /> },
               {
@@ -168,20 +188,26 @@ function InversoresContent() {
                 header: 'Ações',
                 render: (row) => (
                   <div className="actions-cell">
-                    {can(user, 'INVERTERS_UPDATE') ? <Button variant="secondary" onClick={() => openEdit(row)}>Editar</Button> : null}
-                    {can(user, 'INVERTERS_UPDATE') ? <Button variant="ghost" onClick={() => void toggleStatus(row)}>{row.status === 'ACTIVE' ? 'Inativar' : 'Ativar'}</Button> : null}
+                    {can(user, 'INVERTERS_UPDATE') ? <Button type="button" variant="secondary" onClick={() => openEdit(row)}>Editar</Button> : null}
+                    {can(user, 'INVERTERS_UPDATE') ? (
+                      <Button type="button" variant="ghost" onClick={() => void toggleStatus(row)}>
+                        {row.status === 'ACTIVE' ? 'Inativar' : 'Ativar'}
+                      </Button>
+                    ) : null}
                   </div>
                 ),
               },
             ]}
-            empty={<EmptyState title="Nenhum registro encontrado" description="Cadastre um inversor vinculado a uma usina e a um fabricante oficial." />}
+            empty={emptyContent}
           />
         </section>
       ) : null}
       <Modal open={open} title={editing ? 'Editar inversor' : 'Novo inversor'} error={formError} onClose={close} onConfirm={() => void save()}>
         <div className="form-grid">
+          <p className="inverters-form-section">Vínculo</p>
           <SelectField id="usina-inv" label="Usina" value={form.plantId} options={plants.map((item) => ({ value: item.id, label: item.name }))} placeholder="Selecione a usina" onChange={(plantId) => setForm({ ...form, plantId })} />
           <SelectField id="fab-inv" label="Fabricante" value={form.manufacturerId} options={manufacturers.map((item) => ({ value: item.id, label: item.name }))} placeholder="Selecione o fabricante" onChange={(manufacturerId) => setForm({ ...form, manufacturerId })} />
+          <p className="inverters-form-section">Dados técnicos</p>
           <TextField id="modelo-inv" label="Modelo" value={form.model} onChange={(model) => setForm({ ...form, model })} />
           <TextField id="serie-inv" label="Número de série" value={form.serialNumber} onChange={(serialNumber) => setForm({ ...form, serialNumber })} />
           <TextField id="pot-inv" label="Potência nominal (kW)" value={form.ratedPowerKw} onChange={(ratedPowerKw) => setForm({ ...form, ratedPowerKw })} />

@@ -21,7 +21,6 @@ export type MetricValue = {
 export type DashboardOverview = {
   totals: { plants: number; active: number; warning: number; offline: number; openAlerts: number };
   dashboard: {
-    operator: { id: string; name: string } | null;
     generatedAt: string;
     period: DashboardPeriod;
     currentPower: MetricValue;
@@ -29,6 +28,15 @@ export type DashboardOverview = {
     energyMonth: MetricValue;
     energyTotal: MetricValue;
     plants: { total: number; online: number; offline: number; maintenance: number; warning: number };
+    integration?: {
+      total: number;
+      online: number;
+      awaitingIdentification: number;
+      awaitingData: number;
+      noCommunication: number;
+      error: number;
+      notConfigured: number;
+    };
     alerts: { total: number; critical: number; warning: number; info: number };
     customers: { total: number };
     generationSeries: Array<{ label: string; valueKwh: number; collectedAt: string }>;
@@ -39,10 +47,26 @@ export type DashboardOverview = {
       installedPowerKw: number | null;
       energyTodayKwh: number | null;
       energyTodayHasData: boolean;
+      currentPowerKw?: number | null;
+      currentPowerHasData?: boolean;
+      lastReadingAt?: string | null;
+      openAlerts?: number;
       operationalStatus: string;
+      integrationState?: string;
       plantStatus: string;
       latitude: number | null;
       longitude: number | null;
+    }>;
+    operationalPlants?: Array<{
+      id: string;
+      name: string;
+      address?: string | null;
+      customerName: string | null;
+      currentPowerKw: number | null;
+      currentPowerHasData: boolean;
+      lastReadingAt: string | null;
+      openAlerts: number;
+      integrationState: string;
     }>;
     recentAlerts: Array<{
       id: string;

@@ -1,3 +1,5 @@
+import { EmptyState } from '../ui/EmptyState';
+
 type Point = { label: string; valueKwh: number };
 
 type Props = {
@@ -7,11 +9,11 @@ type Props = {
 export function GenerationChart({ points }: Props) {
   if (!points.length) {
     return (
-      <div className="empty compact">
-        <div className="empty-icon" aria-hidden="true">☀</div>
-        <h3>Sem dados</h3>
-        <p>Não há leituras de geração para o período selecionado.</p>
-      </div>
+      <EmptyState
+        title="Sem dados de geração"
+        description="Não há leituras disponíveis para o período selecionado."
+        icon="☀"
+      />
     );
   }
 
@@ -33,26 +35,48 @@ export function GenerationChart({ points }: Props) {
 
   return (
     <div className="chart-wrap">
-      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Gráfico de geração de energia">
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Gráfico de geração de energia em kWh">
         <defs>
           <linearGradient id="b7-gen-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.28" />
-            <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+            <stop offset="0%" stopColor="var(--color-brand-energy)" stopOpacity="0.28" />
+            <stop offset="100%" stopColor="var(--color-brand-energy)" stopOpacity="0" />
           </linearGradient>
         </defs>
         {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
           const y = padding + innerHeight * ratio;
-          return <line key={ratio} x1={padding} x2={width - padding} y1={y} y2={y} stroke="rgba(148,163,184,.18)" strokeWidth="1" />;
+          return (
+            <line
+              key={ratio}
+              x1={padding}
+              x2={width - padding}
+              y1={y}
+              y2={y}
+              stroke="var(--color-border)"
+              strokeWidth="1"
+            />
+          );
         })}
         <polygon fill="url(#b7-gen-fill)" points={area} />
-        <polyline fill="none" stroke="#4ade80" strokeWidth="3" strokeLinejoin="round" points={line} />
+        <polyline
+          fill="none"
+          stroke="var(--color-brand-energy-bright)"
+          strokeWidth="3"
+          strokeLinejoin="round"
+          points={line}
+        />
         {coords.map((item, index) => (
-          <circle key={`${item.point.label}-${index}`} cx={item.x} cy={item.y} r="4" fill="#60a5fa">
-            <title>{`${item.point.label}: ${item.point.valueKwh}`}</title>
+          <circle
+            key={`${item.point.label}-${index}`}
+            cx={item.x}
+            cy={item.y}
+            r="4"
+            fill="var(--color-brand-accent-strong)"
+          >
+            <title>{`${item.point.label}: ${item.point.valueKwh} kWh`}</title>
           </circle>
         ))}
       </svg>
-      <div className="chart-labels">
+      <div className="chart-labels" aria-hidden="true">
         {points.map((point) => (
           <span key={point.label}>{point.label}</span>
         ))}

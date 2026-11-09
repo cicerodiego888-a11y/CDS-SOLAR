@@ -10,6 +10,7 @@ import { EmptyState } from '../../../components/ui/EmptyState';
 import { ErrorMessage } from '../../../components/ui/ErrorMessage';
 import { LoadingState } from '../../../components/ui/LoadingState';
 import { PageHeader } from '../../../components/ui/PageHeader';
+import { SectionHeader } from '../../../components/ui/SectionHeader';
 import { SelectField } from '../../../components/ui/SelectField';
 import { StatusBadge } from '../../../components/ui/StatusBadge';
 import { TextField } from '../../../components/ui/TextField';
@@ -243,41 +244,101 @@ export default function ClienteDetalhePage() {
     }
   }
 
-  if (error) return <div className="shell"><ErrorMessage message={error} /></div>;
-  if (!data) return <div className="shell"><LoadingState message="Carregando cliente..." /></div>;
+  if (error) {
+    return (
+      <div className="shell customers-detail">
+        <ErrorMessage message={error} />
+        <Link href="/clientes"><Button type="button" variant="secondary">Voltar para clientes</Button></Link>
+      </div>
+    );
+  }
+  if (!data) {
+    return (
+      <div className="shell customers-detail">
+        <LoadingState message="Carregando cliente..." />
+      </div>
+    );
+  }
 
   const distributorOptions = distributors.map((row) => ({ value: row.id, label: `${row.name} (${row.code})` }));
 
   return (
-    <div className="shell">
+    <div className="shell customers-detail">
       <PageHeader
+        eyebrow="Cliente"
         title={data.name}
-        description={`${data.document || 'Documento não informado'} · ${data.email || 'sem e-mail'}`}
-        actions={<StatusBadge label={recordStatusLabel(data.status)} status={data.status} />}
-      />
-      <section className="panel panel-compact">
-        <div className="panel-title">
-          <div>
-            <h2>DADOS ENERGÉTICOS</h2>
-            <p>Cadastro do consumidor no domínio energético.</p>
+        description="Identidade comercial do cliente na plataforma."
+        actions={(
+          <div className="customers-detail-actions">
+            <StatusBadge label={recordStatusLabel(data.status)} status={data.status} />
+            <Link href="/clientes"><Button type="button" variant="secondary">Voltar</Button></Link>
           </div>
-          {consumer !== undefined && mode === 'idle' && canUpdate ? (
+        )}
+      />
+
+      <section className="customers-panel">
+        <SectionHeader
+          title="Dados cadastrais"
+          description="Informações comerciais do Customer."
+        />
+        <dl className="detail-grid customers-identity-grid">
+          <div>
+            <dt>Documento</dt>
+            <dd>{data.document || 'Documento não informado'}</dd>
+          </div>
+          <div>
+            <dt>E-mail</dt>
+            <dd>{data.email || 'sem e-mail'}</dd>
+          </div>
+          <div>
+            <dt>Telefone</dt>
+            <dd>{data.phone || '—'}</dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd><StatusBadge label={recordStatusLabel(data.status)} status={data.status} /></dd>
+          </div>
+        </dl>
+      </section>
+
+      <section className="customers-panel">
+        <SectionHeader
+          title="DADOS ENERGÉTICOS"
+          description="Cadastro do consumidor no domínio energético."
+          actions={consumer !== undefined && mode === 'idle' && canUpdate ? (
             consumer
               ? <Button variant="secondary" type="button" onClick={openEdit}>Editar cadastro energético</Button>
               : <Button type="button" onClick={openCreate}>Cadastrar consumidor energético</Button>
-          ) : null}
-        </div>
+          ) : undefined}
+        />
         {consumerError ? <ErrorMessage message={consumerError} /> : null}
-        {consumer === undefined ? <p>Carregando cadastro energético...</p> : null}
+        {consumer === undefined ? <LoadingState message="Carregando cadastro energético..." /> : null}
         {consumer !== undefined && mode === 'idle' ? (
           <div className="energy-summary">
-            <p>
+            <p className="customers-energy-status">
               Status:{' '}
               {consumer
                 ? <StatusBadge label="Cadastrado" status="ACTIVE" />
                 : <StatusBadge label="Não cadastrado" status="INACTIVE" />}
             </p>
-            {consumer ? <p>Documento: {concealDocument(consumer.document)}</p> : null}
+            {consumer ? (
+              <dl className="detail-grid">
+                <div>
+                  <dt>Documento do consumidor</dt>
+                  <dd>{concealDocument(consumer.document)}</dd>
+                </div>
+                <div>
+                  <dt>Titular</dt>
+                  <dd>{consumer.name}</dd>
+                </div>
+                <div>
+                  <dt>Contato</dt>
+                  <dd>{[consumer.email, consumer.phone].filter(Boolean).join(' · ') || '—'}</dd>
+                </div>
+              </dl>
+            ) : (
+              <p className="customers-muted">Este cliente ainda não possui perfil de energia (Consumer) vinculado.</p>
+            )}
           </div>
         ) : null}
         {mode !== 'idle' ? (
@@ -313,19 +374,20 @@ export default function ClienteDetalhePage() {
 
         {consumer ? (
           <div className="energy-units">
-            <div className="panel-title">
-              <div>
-                <h3>UNIDADES CONSUMIDORAS</h3>
-                <p>UC e Conta Contrato são campos distintos.</p>
-              </div>
-              {unitMode === 'idle' && canUpdate ? (
+            <SectionHeader
+              title="UNIDADES CONSUMIDORAS"
+              description="UC e Conta Contrato são campos distintos do domínio de energia."
+              actions={unitMode === 'idle' && canUpdate ? (
                 <Button type="button" onClick={openUnitCreate}>+ Cadastrar unidade consumidora</Button>
-              ) : null}
-            </div>
+              ) : undefined}
+            />
             {unitsError ? <ErrorMessage message={unitsError} /> : null}
-            {units === null ? <p>Carregando unidades consumidoras...</p> : null}
+            {units === null ? <LoadingState message="Carregando unidades consumidoras..." /> : null}
             {units && units.length === 0 && unitMode === 'idle' ? (
-              <p>Este consumidor ainda não possui unidade consumidora cadastrada.</p>
+              <EmptyState
+                title="Sem unidades consumidoras"
+                description="Este consumidor ainda não possui unidade consumidora cadastrada."
+              />
             ) : null}
             {units && units.length > 0 && unitMode === 'idle' ? (
               <div className="energy-unit-grid">
@@ -349,7 +411,9 @@ export default function ClienteDetalhePage() {
                         <dd><StatusBadge label={recordStatusLabel(unit.status)} status={unit.status} /></dd>
                       </div>
                     </dl>
-                    {canUpdate ? <Button variant="secondary" type="button" onClick={() => openUnitEdit(unit)}>Editar</Button> : null}
+                    {canUpdate ? (
+                      <Button variant="secondary" type="button" onClick={() => openUnitEdit(unit)}>Editar</Button>
+                    ) : null}
                   </article>
                 ))}
               </div>
@@ -380,7 +444,13 @@ export default function ClienteDetalhePage() {
                   onChange={(contractAccount) => setUnitForm({ ...unitForm, contractAccount: normalizeUtilityInput(contractAccount) })}
                 />
                 <div className="actions-cell">
-                  <Button variant="secondary" type="button" onClick={() => { setUnitMode('idle'); setEditingUnit(null); setUnitFormError(''); setUnitFieldErrors({}); }}>Cancelar</Button>
+                  <Button
+                    variant="secondary"
+                    type="button"
+                    onClick={() => { setUnitMode('idle'); setEditingUnit(null); setUnitFormError(''); setUnitFieldErrors({}); }}
+                  >
+                    Cancelar
+                  </Button>
                   <Button type="submit" disabled={unitSaving}>{unitSaving ? 'Salvando...' : 'Salvar'}</Button>
                 </div>
               </form>
@@ -388,14 +458,17 @@ export default function ClienteDetalhePage() {
           </div>
         ) : null}
       </section>
-      <section className="panel" style={{ marginTop: 18 }}>
-        <div className="panel-title">
-          <div>
-            <h2>Usinas do cliente</h2>
-            <p>{data.plants.length} usina(s) vinculada(s).</p>
-          </div>
-          <Link href={`/usinas?cliente=${data.id}`}><Button>Ver usinas</Button></Link>
-        </div>
+
+      <section className="customers-panel">
+        <SectionHeader
+          title="Usinas do cliente"
+          description={`${data.plants.length} usina(s) vinculada(s).`}
+          actions={(
+            <Link href={`/usinas?cliente=${data.id}`}>
+              <Button type="button">Ver usinas</Button>
+            </Link>
+          )}
+        />
         <DataTable
           rows={data.plants}
           rowKey={(row) => row.id}
@@ -403,7 +476,11 @@ export default function ClienteDetalhePage() {
             { key: 'name', header: 'Usina', render: (row) => <Link href={`/usinas/${row.id}`}>{row.name}</Link> },
             { key: 'inverters', header: 'Inversores', render: (row) => row._count?.inverters ?? 0 },
             { key: 'equipment', header: 'Equipamentos', render: (row) => row._count?.equipment ?? 0 },
-            { key: 'status', header: 'Status', render: (row) => <StatusBadge label={plantOperationalLabel(row.status)} status={row.status} /> },
+            {
+              key: 'status',
+              header: 'Status',
+              render: (row) => <StatusBadge label={plantOperationalLabel(row.status)} status={row.status} />,
+            },
           ]}
           empty={<EmptyState title="Nenhuma usina" description="Este cliente ainda não possui usinas." />}
         />

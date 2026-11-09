@@ -1,0 +1,206 @@
+{
+  "version": 3,
+  "pages404": true,
+  "caseSensitive": false,
+  "basePath": "",
+  "redirects": [
+    {
+      "source": "/:path+/",
+      "destination": "/:path+",
+      "internal": true,
+      "statusCode": 308,
+      "regex": "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$"
+    }
+  ],
+  "headers": [],
+  "rewrites": {
+    "beforeFiles": [],
+    "afterFiles": [],
+    "fallback": []
+  },
+  "dynamicRoutes": [
+    {
+      "page": "/alertas/[id]",
+      "regex": "^/alertas/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/alertas/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/clientes/[id]",
+      "regex": "^/clientes/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/clientes/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/consumidores/[id]",
+      "regex": "^/consumidores/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/consumidores/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/distribuidoras/[id]",
+      "regex": "^/distribuidoras/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/distribuidoras/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/inversores/[id]",
+      "regex": "^/inversores/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/inversores/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/unidades-consumidoras/[id]",
+      "regex": "^/unidades\\-consumidoras/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/unidades\\-consumidoras/(?<nxtPid>[^/]+?)(?:/)?$"
+    },
+    {
+      "page": "/usinas/[id]",
+      "regex": "^/usinas/([^/]+?)(?:/)?$",
+      "routeKeys": {
+        "nxtPid": "nxtPid"
+      },
+      "namedRegex": "^/usinas/(?<nxtPid>[^/]+?)(?:/)?$"
+    }
+  ],
+  "staticRoutes": [
+    {
+      "page": "/",
+      "regex": "^/(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/(?:/)?$"
+    },
+    {
+      "page": "/_not-found",
+      "regex": "^/_not\\-found(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/_not\\-found(?:/)?$"
+    },
+    {
+      "page": "/acesso-negado",
+      "regex": "^/acesso\\-negado(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/acesso\\-negado(?:/)?$"
+    },
+    {
+      "page": "/alertas",
+      "regex": "^/alertas(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/alertas(?:/)?$"
+    },
+    {
+      "page": "/clientes",
+      "regex": "^/clientes(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/clientes(?:/)?$"
+    },
+    {
+      "page": "/configuracoes",
+      "regex": "^/configuracoes(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/configuracoes(?:/)?$"
+    },
+    {
+      "page": "/consumidores",
+      "regex": "^/consumidores(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/consumidores(?:/)?$"
+    },
+    {
+      "page": "/distribuidoras",
+      "regex": "^/distribuidoras(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/distribuidoras(?:/)?$"
+    },
+    {
+      "page": "/equipamentos",
+      "regex": "^/equipamentos(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/equipamentos(?:/)?$"
+    },
+    {
+      "page": "/gestao-energia",
+      "regex": "^/gestao\\-energia(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/gestao\\-energia(?:/)?$"
+    },
+    {
+      "page": "/gestao-energia/rateios",
+      "regex": "^/gestao\\-energia/rateios(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/gestao\\-energia/rateios(?:/)?$"
+    },
+    {
+      "page": "/inversores",
+      "regex": "^/inversores(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/inversores(?:/)?$"
+    },
+    {
+      "page": "/login",
+      "regex": "^/login(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/login(?:/)?$"
+    },
+    {
+      "page": "/monitoramento",
+      "regex": "^/monitoramento(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/monitoramento(?:/)?$"
+    },
+    {
+      "page": "/operacao",
+      "regex": "^/operacao(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/operacao(?:/)?$"
+    },
+    {
+      "page": "/relatorios",
+      "regex": "^/relatorios(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/relatorios(?:/)?$"
+    },
+    {
+      "page": "/unidades-consumidoras",
+      "regex": "^/unidades\\-consumidoras(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/unidades\\-consumidoras(?:/)?$"
+    },
+    {
+      "page": "/usinas",
+      "regex": "^/usinas(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/usinas(?:/)?$"
+    }
+  ],
+  "dataRoutes": [],
+  "rsc": {
+    "header": "rsc",
+    "varyHeader": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+    "prefetchHeader": "next-router-prefetch",
+    "didPostponeHeader": "x-nextjs-postponed",
+    "contentTypeHeader": "text/x-component",
+    "suffix": ".rsc",
+    "prefetchSuffix": ".prefetch.rsc",
+    "prefetchSegmentHeader": "next-router-segment-prefetch",
+    "prefetchSegmentSuffix": ".segment.rsc",
+    "prefetchSegmentDirSuffix": ".segments"
+  },
+  "rewriteHeaders": {
+    "pathHeader": "x-nextjs-rewritten-path",
+    "queryHeader": "x-nextjs-rewritten-query"
+  }
+}

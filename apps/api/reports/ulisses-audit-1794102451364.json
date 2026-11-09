@@ -1,0 +1,213 @@
+{
+  "sprint": "B7-ULISSES-01 AUDIT",
+  "timestamp": "2026-11-08T01:47:31.355Z",
+  "customers": [
+    {
+      "id": "cmucom31o0005tymcu7cgt9d3",
+      "name": "Ulisses Lima",
+      "document": "00893696455",
+      "email": "ulissesemanuel1234@gmail.com",
+      "phone": "88921466353",
+      "address": null,
+      "city": null,
+      "state": null,
+      "status": "ACTIVE",
+      "consumerId": null,
+      "createdAt": "2026-09-22T13:00:15.468Z",
+      "updatedAt": "2026-09-22T15:16:38.637Z",
+      "plants": [
+        {
+          "id": "cmucots7g0007tymccjpscinm",
+          "name": "Ulisses Lima",
+          "customerId": "cmucom31o0005tymcu7cgt9d3",
+          "status": "ACTIVE",
+          "installedPowerKw": "10",
+          "distributor": "Equatorial",
+          "consumerUnit": "003005596601",
+          "consumerUnitId": null,
+          "address": "FA Lejado Alto, s/n, Fazenda - Minadouro do Negrão - AL",
+          "latitude": null,
+          "longitude": null,
+          "createdAt": "2026-09-22T13:06:14.666Z",
+          "updatedAt": "2026-09-22T15:17:22.351Z",
+          "inverters": [],
+          "equipment": [
+            {
+              "id": "cmucp320h0009tymcl89r0wm0",
+              "plantId": "cmucots7g0007tymccjpscinm",
+              "inverterId": null,
+              "type": "GATEWAY",
+              "manufacturerName": "AUXSOL",
+              "model": null,
+              "serialNumber": "A012510191909021",
+              "status": "ACTIVE",
+              "notes": "Datalogger da usina Ulisses Lima",
+              "createdAt": "2026-09-22T13:13:27.279Z",
+              "updatedAt": "2026-09-22T13:13:27.279Z"
+            }
+          ],
+          "consumerUnitRef": null
+        }
+      ]
+    }
+  ],
+  "snInv": [],
+  "modelHint": [
+    {
+      "id": "cmubemnew0003tyi0yxakdzqj",
+      "plantId": "cmube71va0001tyi0i6d0f8ll",
+      "manufacturerId": "cmtp16dej0002tymsyoa63vi2",
+      "manufacturer": "AUXSOL",
+      "model": "ASN-10SL",
+      "serialNumber": "ASN-10SL2508230101",
+      "ratedPowerKw": "10",
+      "externalId": null,
+      "status": "ACTIVE",
+      "createdAt": "2026-09-21T15:32:59.528Z",
+      "updatedAt": "2026-09-21T15:37:17.594Z",
+      "plant": {
+        "id": "cmube71va0001tyi0i6d0f8ll",
+        "name": "José Bezerra Sobrinho",
+        "customerId": "cmu7lkkmu0000tyus5j0u824g",
+        "status": "ACTIVE",
+        "installedPowerKw": "20",
+        "distributor": "Equatorial",
+        "consumerUnit": "11230436",
+        "consumerUnitId": null,
+        "address": "PV Batingas, 247, Povoado CEP: 57609-899 Palmeira dos Índios - AL",
+        "latitude": null,
+        "longitude": null,
+        "createdAt": "2026-09-21T15:20:51.762Z",
+        "updatedAt": "2026-09-21T15:20:51.762Z",
+        "customer": {
+          "id": "cmu7lkkmu0000tyus5j0u824g",
+          "name": "José Bezerra Sobrinho",
+          "document": "06105181515",
+          "email": "josebezerra2712@gmail.com",
+          "phone": "88996255866",
+          "address": null,
+          "city": null,
+          "state": null,
+          "status": "ACTIVE",
+          "consumerId": null,
+          "createdAt": "2026-09-18T23:36:15.222Z",
+          "updatedAt": "2026-09-18T23:36:15.222Z"
+        }
+      },
+      "bindings": [],
+      "equipment": []
+    }
+  ],
+  "gatewayEquipment": [
+    {
+      "id": "cmucp320h0009tymcl89r0wm0",
+      "plantId": "cmucots7g0007tymccjpscinm",
+      "inverterId": null,
+      "type": "GATEWAY",
+      "manufacturerName": "AUXSOL",
+      "model": null,
+      "serialNumber": "A012510191909021",
+      "status": "ACTIVE",
+      "notes": "Datalogger da usina Ulisses Lima",
+      "createdAt": "2026-09-22T13:13:27.279Z",
+      "updatedAt": "2026-09-22T13:13:27.279Z",
+      "plant": {
+        "id": "cmucots7g0007tymccjpscinm",
+        "name": "Ulisses Lima",
+        "customerId": "cmucom31o0005tymcu7cgt9d3",
+        "status": "ACTIVE",
+        "installedPowerKw": "10",
+        "distributor": "Equatorial",
+        "consumerUnit": "003005596601",
+        "consumerUnitId": null,
+        "address": "FA Lejado Alto, s/n, Fazenda - Minadouro do Negrão - AL",
+        "latitude": null,
+        "longitude": null,
+        "createdAt": "2026-09-22T13:06:14.666Z",
+        "updatedAt": "2026-09-22T15:17:22.351Z",
+        "customer": {
+          "id": "cmucom31o0005tymcu7cgt9d3",
+          "name": "Ulisses Lima",
+          "document": "00893696455",
+          "email": "ulissesemanuel1234@gmail.com",
+          "phone": "88921466353",
+          "address": null,
+          "city": null,
+          "state": null,
+          "status": "ACTIVE",
+          "consumerId": null,
+          "createdAt": "2026-09-22T13:00:15.468Z",
+          "updatedAt": "2026-09-22T15:16:38.637Z"
+        }
+      },
+      "inverter": null
+    }
+  ],
+  "legacyUcPlants": [
+    {
+      "id": "cmucots7g0007tymccjpscinm",
+      "name": "Ulisses Lima",
+      "customerId": "cmucom31o0005tymcu7cgt9d3",
+      "status": "ACTIVE",
+      "installedPowerKw": "10",
+      "distributor": "Equatorial",
+      "consumerUnit": "003005596601",
+      "consumerUnitId": null,
+      "address": "FA Lejado Alto, s/n, Fazenda - Minadouro do Negrão - AL",
+      "latitude": null,
+      "longitude": null,
+      "createdAt": "2026-09-22T13:06:14.666Z",
+      "updatedAt": "2026-09-22T15:17:22.351Z",
+      "customer": {
+        "id": "cmucom31o0005tymcu7cgt9d3",
+        "name": "Ulisses Lima",
+        "document": "00893696455",
+        "email": "ulissesemanuel1234@gmail.com",
+        "phone": "88921466353",
+        "address": null,
+        "city": null,
+        "state": null,
+        "status": "ACTIVE",
+        "consumerId": null,
+        "createdAt": "2026-09-22T13:00:15.468Z",
+        "updatedAt": "2026-09-22T15:16:38.637Z"
+      },
+      "inverters": [],
+      "equipment": [
+        {
+          "id": "cmucp320h0009tymcl89r0wm0",
+          "plantId": "cmucots7g0007tymccjpscinm",
+          "inverterId": null,
+          "type": "GATEWAY",
+          "manufacturerName": "AUXSOL",
+          "model": null,
+          "serialNumber": "A012510191909021",
+          "status": "ACTIVE",
+          "notes": "Datalogger da usina Ulisses Lima",
+          "createdAt": "2026-09-22T13:13:27.279Z",
+          "updatedAt": "2026-09-22T13:13:27.279Z"
+        }
+      ]
+    }
+  ],
+  "auxsolManufacturer": [
+    {
+      "id": "cmtp16dej0002tymsyoa63vi2",
+      "code": "AUXSOL",
+      "name": "Auxsol",
+      "active": true,
+      "integrationStatus": "READY",
+      "capabilities": {
+        "alerts": true,
+        "telemetry": true,
+        "remoteControl": false
+      },
+      "createdAt": "2026-09-05T23:45:29.179Z",
+      "updatedAt": "2026-09-14T13:08:01.221Z"
+    }
+  ],
+  "auxsolBindings": [],
+  "isolationProbe": {
+    "otherCustomersCount": 5
+  }
+}

@@ -1,3 +1,5 @@
+import { UNAVAILABLE_LABEL } from './status-labels.ts';
+
 const numberPt = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
 
 export function formatNumber(value: number) {
@@ -5,12 +7,12 @@ export function formatNumber(value: number) {
 }
 
 export function formatPowerKw(value: number | null, hasData: boolean) {
-  if (!hasData || value === null) return 'Sem dados';
+  if (!hasData || value === null) return '—';
   return `${formatNumber(value)} kW`;
 }
 
 export function formatEnergyKwh(value: number | null, hasData: boolean) {
-  if (!hasData || value === null) return 'Sem dados';
+  if (!hasData || value === null) return '—';
   if (Math.abs(value) >= 1000) {
     return `${formatNumber(value / 1000)} MWh`;
   }
@@ -40,12 +42,12 @@ export function formatRelativeTime(value?: string | Date | null, now = new Date(
 }
 
 export function formatPercentOrNd(value: number | null | undefined) {
-  if (value === null || value === undefined) return 'N/D';
+  if (value === null || value === undefined) return UNAVAILABLE_LABEL;
   return `${formatNumber(value)}%`;
 }
 
 export function formatCoveragePercent(value: number | null | undefined) {
-  if (value === null || value === undefined) return '0%';
+  if (value === null || value === undefined) return UNAVAILABLE_LABEL;
   return `${formatNumber(value)}%`;
 }
 

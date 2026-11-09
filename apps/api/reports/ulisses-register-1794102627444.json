@@ -1,0 +1,72 @@
+{
+  "sprint": "B7-ULISSES-01",
+  "before": {
+    "customerId": "cmucom31o0005tymcu7cgt9d3",
+    "plantId": "cmucots7g0007tymccjpscinm",
+    "inverterId": "cmw76di320001tyys55mvm5ex",
+    "gatewayEquipmentId": "cmucp320h0009tymcl89r0wm0",
+    "bindingId": "cmw76di400003tyys4dhcrfnh",
+    "plantConsumerUnit": "003005596601",
+    "plantDistributor": "Equatorial",
+    "otherCustomersCount": 5
+  },
+  "reused": {
+    "customerId": "cmucom31o0005tymcu7cgt9d3",
+    "plantId": "cmucots7g0007tymccjpscinm",
+    "manufacturerId": "cmtp16dej0002tymsyoa63vi2",
+    "gatewayEquipmentId": "cmucp320h0009tymcl89r0wm0"
+  },
+  "created": {
+    "inverter": false,
+    "binding": false
+  },
+  "associated": {
+    "inverterToPlant": true,
+    "gatewayToInverter": true
+  },
+  "identifiers": {
+    "local": {
+      "customerId": "cmucom31o0005tymcu7cgt9d3",
+      "plantId": "cmucots7g0007tymccjpscinm",
+      "inverterId": "cmw76di320001tyys55mvm5ex",
+      "gatewayEquipmentId": "cmucp320h0009tymcl89r0wm0",
+      "bindingId": "cmw76di400003tyys4dhcrfnh"
+    },
+    "external": {
+      "provider": "AUXSOL",
+      "plantId": 102545,
+      "inverterId": "1234568136545421",
+      "serialNumber": "ASN-10SL251016000352",
+      "model": "ASN-10SL",
+      "gatewaySerial": "A012510191909021"
+    }
+  },
+  "binding": {
+    "id": "cmw76di400003tyys4dhcrfnh",
+    "provider": "AUXSOL",
+    "inverterId": "cmw76di320001tyys55mvm5ex",
+    "externalId": "1234568136545421",
+    "externalMeta": {
+      "model": "ASN-10SL",
+      "plantId": 102545,
+      "provider": "AUXSOL",
+      "gatewayId": "A012510191909021",
+      "inverterId": 1234568136545421,
+      "resourceType": "INVERTER",
+      "serialNumber": "ASN-10SL251016000352"
+    },
+    "status": "READY",
+    "secretRef": "AUXSOL_APP_SECRET",
+    "containsSecretValue": false
+  },
+  "preservation": {
+    "customerUnchanged": true,
+    "plantUnchanged": true,
+    "legacyUcPreserved": true,
+    "distributorPreserved": true,
+    "historicalModelNote": "Modelo confirmado da integração: ASN-10SL. Hint histórico ASL-10SL preservado como divergência documental (não havia Inverter local com ASL-10SL para sobrescrever).",
+    "otherCustomersUntouched": true
+  },
+  "auxsolRemoteMutations": false,
+  "telemetryPersisted": false
+}

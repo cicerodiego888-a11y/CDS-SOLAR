@@ -1,3 +1,12 @@
+import {
+  ALERT_SEVERITY_LABELS_PT,
+  ALERT_STATUS_LABELS_PT,
+  NORMALIZED_STATUS_LABELS,
+  alertLifecycleLabel,
+  alertSeverityLabel,
+  normalizedStatusLabel,
+} from '../lib/status-labels.ts';
+
 export type InverterManufacturerCode =
   | 'AUXSOL'
   | 'SOLPLANET'
@@ -31,18 +40,18 @@ export function getInverterManufacturerName(code?: string | null): string {
 }
 
 export const INVERTER_STATUS_LABELS: Record<InverterOperationalStatus, string> = {
-  ONLINE: 'Online',
-  OFFLINE: 'Offline',
-  WARNING: 'Atenção',
-  ERROR: 'Erro',
-  UNKNOWN: 'Desconhecido',
+  ONLINE: NORMALIZED_STATUS_LABELS.ONLINE,
+  OFFLINE: NORMALIZED_STATUS_LABELS.OFFLINE,
+  WARNING: NORMALIZED_STATUS_LABELS.WARNING,
+  ERROR: NORMALIZED_STATUS_LABELS.ERROR,
+  UNKNOWN: NORMALIZED_STATUS_LABELS.UNKNOWN,
 };
 
 export const PLANT_STATUS_LABELS: Record<PlantStatus, string> = {
   ACTIVE: 'Ativa',
   INACTIVE: 'Inativa',
-  WARNING: 'Atenção',
-  OFFLINE: 'Offline',
+  WARNING: NORMALIZED_STATUS_LABELS.WARNING,
+  OFFLINE: NORMALIZED_STATUS_LABELS.OFFLINE,
 };
 
 export const INTEGRATION_STATUS_LABELS: Record<ManufacturerIntegrationStatus, string> = {
@@ -52,8 +61,7 @@ export const INTEGRATION_STATUS_LABELS: Record<ManufacturerIntegrationStatus, st
 };
 
 export function getInverterStatusLabel(status?: string | null): string {
-  if (!status) return INVERTER_STATUS_LABELS.UNKNOWN;
-  return INVERTER_STATUS_LABELS[status as InverterOperationalStatus] ?? INVERTER_STATUS_LABELS.UNKNOWN;
+  return normalizedStatusLabel(status);
 }
 
 export function getPlantStatusLabel(status?: string | null): string {
@@ -72,25 +80,23 @@ export function getIntegrationStatusLabel(status?: string | null): string {
 }
 
 export const ALERT_SEVERITY_LABELS = {
-  INFO: 'Informação',
-  WARNING: 'Atenção',
-  CRITICAL: 'Crítico',
+  INFO: ALERT_SEVERITY_LABELS_PT.INFO,
+  WARNING: ALERT_SEVERITY_LABELS_PT.WARNING,
+  CRITICAL: ALERT_SEVERITY_LABELS_PT.CRITICAL,
 } as const;
 
 export const ALERT_STATUS_LABELS = {
-  OPEN: 'Aberto',
-  ACKNOWLEDGED: 'Reconhecido',
-  RESOLVED: 'Resolvido',
+  OPEN: ALERT_STATUS_LABELS_PT.OPEN,
+  ACKNOWLEDGED: ALERT_STATUS_LABELS_PT.ACKNOWLEDGED,
+  RESOLVED: ALERT_STATUS_LABELS_PT.RESOLVED,
 } as const;
 
 export function getAlertSeverityLabel(severity?: string | null): string {
-  if (!severity) return ALERT_SEVERITY_LABELS.INFO;
-  return ALERT_SEVERITY_LABELS[severity as keyof typeof ALERT_SEVERITY_LABELS] ?? severity;
+  return alertSeverityLabel(severity);
 }
 
 export function getAlertStatusLabel(status?: string | null): string {
-  if (!status) return ALERT_STATUS_LABELS.OPEN;
-  return ALERT_STATUS_LABELS[status as keyof typeof ALERT_STATUS_LABELS] ?? status;
+  return alertLifecycleLabel(status);
 }
 
 export function getStatusTone(status?: string | null): 'success' | 'warning' | 'danger' | 'neutral' | 'info' {

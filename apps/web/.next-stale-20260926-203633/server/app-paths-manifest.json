@@ -1,0 +1,8 @@
+{
+  "/equipamentos/page": "app/equipamentos/page.js",
+  "/clientes/page": "app/clientes/page.js",
+  "/inversores/page": "app/inversores/page.js",
+  "/distribuidoras/page": "app/distribuidoras/page.js",
+  "/consumidores/page": "app/consumidores/page.js",
+  "/page": "app/page.js"
+}

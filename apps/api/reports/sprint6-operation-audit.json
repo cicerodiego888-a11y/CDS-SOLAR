@@ -1,0 +1,259 @@
+{
+  "sprint": 6,
+  "title": "OPERAÇÃO REAL DA USINA",
+  "generatedAt": "2026-09-26T14:50:00.000Z",
+  "updatedAt": "2026-09-26T14:50:00.000Z",
+  "updateNote": "Corrigido após auditoria profunda (Monitoring/Integration/AUXSOL + Auth/Frontend). Circuit breaker/cooldown e API HTTP de binding reclassificados.",
+  "baseline": {
+    "apiHealth": {
+      "status": "ok",
+      "database": "ok",
+      "redis": "ok",
+      "port": 3001
+    },
+    "web": { "port": 3000, "login": 200 },
+    "migrations": { "count": 12, "pending": 0, "upToDate": true },
+    "commands": {
+      "test": "PASS — API 420, Web 36",
+      "lint": "PASS",
+      "build": "PASS",
+      "prismaValidate": "PASS"
+    },
+    "migrationDecision": "NENHUMA_MIGRATION — modelo atual suficiente"
+  },
+  "monitoring": {
+    "verdict": "OK",
+    "components": {
+      "MonitoringReading": {
+        "status": "OK",
+        "persistedFields": [
+          "collectedAt",
+          "powerKw",
+          "energyTodayKwh",
+          "energyMonthKwh",
+          "energyTotalKwh",
+          "communicationOk",
+          "sourceProvider",
+          "idempotencyKey",
+          "rawPayload"
+        ],
+        "note": "externalReadingId/externalPlantId/status/alarms vivem no contrato NormalizedMonitoringData e/ou rawPayload; não há colunas dedicadas — sem necessidade de migration."
+      },
+      "history": { "status": "OK", "endpoint": "GET /api/monitoring/history e /plants/:id/history", "emptyMessage": "Não existem leituras para o período." },
+      "aggregations": { "status": "OK", "hasDataFlag": true, "emptyNotZero": true, "powerNeverConvertedToEnergy": true },
+      "availability": { "status": "OK", "healthIncludes": ["HEALTHY", "ATTENTION", "CRITICAL", "NO_DATA"] },
+      "alerts": { "status": "OK", "rules": ["INVERTER_OFFLINE", "INVERTER_WARNING", "INVERTER_ERROR", "NO_RECENT_READING", "GENERATION_ANOMALY"] },
+      "AlertEvent": { "status": "OK" },
+      "operations": { "status": "OK", "scoped": true, "usesBuildPlantWhere": true },
+      "dashboard": { "status": "OK", "endpoint": "GET /api/monitoring/overview", "emptyNotZero": true },
+      "diagnosis": { "status": "OK", "endpoints": ["/monitoring/diagnostics/plants/:plantId", "/monitoring/diagnostics/inverters/:inverterId"] }
+    },
+    "gaps": [
+      {
+        "severity": "FIXED_SPRINT6",
+        "id": "PLANT_KPI_SUMMARY",
+        "detail": "Plant KPIs agora expõem currentPowerKw / energyToday/Month/Total com hasData."
+      },
+      {
+        "severity": "MEDIUM",
+        "id": "FLAT_ENERGY_TOTAL_LOOKS_LIKE_NO_DATA",
+        "detail": "Dia com ENERGY_TOTAL flat (delta=0) → hasData=false; pode confundir 'sem geração' com 'sem dado'."
+      }
+    ]
+  },
+  "integration": {
+    "verdict": "OK_COM_BLOQUEIOS_OPERACIONAIS",
+    "components": {
+      "Integration": "OK",
+      "IntegrationBinding": "OK schema — unique(inverterId, provider); externalId oficial; secretRef apenas referência",
+      "IntegrationBindingHttpCrud": "MISSING — create/update só via script discovery/seed; sem controller Nest de produto",
+      "IntegrationEngine": "OK — único motor",
+      "adapters": "OK — AUXSOL live + PlannedManufacturerAdapter blocked",
+      "collector": "OK — IntegrationCollectionService; validateNormalizedReading; não persiste inválido",
+      "normalizer": "OK — data=null → []; não inventa zero",
+      "scheduler": "OK — IntegrationCollectionScheduler (exige Redis)",
+      "BullMQ": "OK",
+      "Redis": "OK — necessário para schedule/worker/lock distribuído",
+      "retry": "OK — AuxsolClient + BullMQ attempts",
+      "rateLimit": "PARTIAL — API auth RateLimitGuard; sem throttle por fabricante",
+      "circuitBreaker": "MISSING",
+      "cooldown": "MISSING",
+      "health": "OK — /api/health.integrations",
+      "inverterAutoBinding": "MISSING (correto — não criar binding automático)",
+      "serialCopiedToExternalId": "MISSING (correto — não copiar serial)"
+    },
+    "bindingStatusEnum": ["NOT_CONFIGURED", "READY", "CONNECTED", "AUTH_ERROR", "COMMUNICATION_ERROR"],
+    "presentationStatesPreferred": {
+      "NOT_CONFIGURED": "sem binding/config",
+      "AWAITING_IDENTIFICATION": "fabricante/inversor sem externalId oficial",
+      "CONFIGURED_AWAITING_DATA": "binding/READY sem leitura válida",
+      "ONLINE": "leitura recente dentro do threshold (MONITORING_NO_READING_THRESHOLD_SECONDS default 900)",
+      "NO_COMMUNICATION": "última leitura além do threshold",
+      "ERROR": "AUTH_ERROR / COMMUNICATION_ERROR / lastError"
+    },
+    "note": "Estados de apresentação calculados a partir de IntegrationBindingStatus + leitura recente; sem migration."
+  },
+  "auxsol": {
+    "verdict": "OK_NAO_ALTERAR",
+    "auth": "POST /auth/token → AWX-0000 observado",
+    "TokenManager": "OK — em memória de processo",
+    "HttpAuxsolTransport": "OK",
+    "listPlants": "OK transport/script — sem rota Nest de produto",
+    "getInvertersByPlant": "OK transport/script — sem rota Nest de produto",
+    "realtime": "OK — data=null normaliza para array vazio",
+    "liveStatusAlarms": "MISSING — normalizeAuxsolRealtime usa status=UNKNOWN de propósito; alarmas não modeladas; regras OFFLINE/WARNING/ERROR pouco efetivas no live",
+    "discovery": "OK — TARGET_NOT_FOUND sem fallback de serial",
+    "validation": "OK",
+    "persistence": "gated por AUXSOL_PERSIST_READINGS=true + runtime.persistable",
+    "realClients": {
+      "jose": {
+        "serial": "ASN-10SL2508230101",
+        "gateway": "A012509010791620",
+        "binding": false,
+        "gatewayInverterLink": false,
+        "action": "NÃO ALTERAR"
+      },
+      "ulisses": {
+        "serialObservedCloud": "ASN-10SL251016000352",
+        "aslAsnDivergence": "PENDENTE — não corrigir automaticamente",
+        "inverterInB7": false,
+        "gateway": "A012510191909021",
+        "action": "NÃO ALTERAR"
+      }
+    },
+    "targetJoseDiscovery": "TARGET_NOT_FOUND no escopo APP_ID atual (histórico Sprint 4/5) — não inventar leitura"
+  },
+  "authorization": {
+    "verdict": "OK_COM_LIMITACAO_ARQUITETURAL",
+    "permissionGuard": "OK — permission-code only; sem membership",
+    "authorizationService": "OK — resolveAccessScope + buildPlantWhere + assertPlantAccess",
+    "staffUnrestrictedRoles": ["ADMIN", "ADMINISTRADOR", "OPERATOR", "OPERADOR", "TECHNICIAN", "TECNICO", "COMMERCIAL", "COMERCIAL", "POS_VENDA"],
+    "scopedRoles": ["CUSTOMER", "INVESTIDOR", "CONSUMIDOR"],
+    "scopedEndpoints": {
+      "monitoring": true,
+      "operations": true,
+      "diagnostics": true
+    },
+    "permissionOnlyNoMembershipFilter": {
+      "customers": true,
+      "plants": true,
+      "inverters": true,
+      "equipment": true,
+      "alerts": true,
+      "integrations": true
+    },
+    "p0LeakageCurrent": false,
+    "classificationNote": "Subagente Auth classificou CRUD unscoped como P0 potencial. Critério Sprint 6: vazamento atual = papéis scoped recebendo registros fora do escopo. Hoje papéis scoped não têm PLANTS_VIEW/ALERTS_VIEW/etc.; staff é unrestricted por desenho. Classificação adotada: IMPORTANT_ARCHITECTURAL (futuro P0 se portal scoped ganhar essas permissões).",
+    "rationale": "Todos os papéis com PLANTS_VIEW/ALERTS_VIEW/INVERTERS_VIEW são staff unrestricted. Papéis portal só têm DASHBOARD_VIEW+MONITORING_VIEW e monitoring usa buildPlantWhere.",
+    "architecturalLimitation": "CRUD de cadastro e GET /alerts não aplicam UserMembership. Não alterar modelo de negócio nesta sprint."
+  },
+  "frontend": {
+    "verdict": "OK_APOS_CENTRAL_USINA",
+    "pages": {
+      "dashboard": "OK — overview real, empty≠zero",
+      "usinas": "OK",
+      "usinasDetail": "OK — Central da Usina Sprint 6 (resumo, comunicação, integração, equipamentos com inversor, erro de monitoring visível)",
+      "inversores": "OK",
+      "inversoresDetail": "OK — diagnóstico + binding + empty reading message",
+      "equipamentos": "OK",
+      "monitoramento": "OK",
+      "operacao": "OK — scoped",
+      "alertas": "OK",
+      "configuracoes": "PARTIAL — catálogo fabricantes; engine/queue/discovery UI ausente (CLI/admin no inversor)"
+    }
+  },
+  "ux": {
+    "verdict": "OK",
+    "loading": "OK",
+    "emptyState": "OK — — / EmptyState; alertas ativos não forçam 0 sem monitoring",
+    "error": "OK — plant detail mostra erro de monitoring",
+    "success": "OK",
+    "focusRefreshNavResponsive": "OK_BASICO",
+    "emptyNotZero": "OK"
+  },
+  "operationalIdentity": {
+    "chain": "Plant → Inverter → Equipment → Gateway/Datalogger → IntegrationBinding",
+    "rulesConfirmed": {
+      "serialLocalNotExternalId": true,
+      "bindingNotAutoCreated": true,
+      "secretRefOnly": true,
+      "gatewayInverterIdOptional": true
+    },
+    "latestIdentityAudit": "apps/api/reports/operational-identity-audit-1790431004589.json",
+    "joseWithoutBinding": true,
+    "ulissesWithoutInverter": true
+  },
+  "sprint5CertData": {
+    "action": "NÃO APAGAR AUTOMATICAMENTE",
+    "customers": [
+      { "id": "cmuigi1bn0003tyagp4m522ja", "name": "SPRINT5 CERT OUTRO CONSUMER" },
+      { "id": "cmuigi2as000styag2oa5xo2p", "name": "SPRINT5 CERT VIA COMERCIAL" },
+      { "id": "cmuigi1b80002tyagumh96ecs", "name": "SPRINT5 CERT SEM CONSUMER" },
+      { "id": "cmuigi19j0001tyagat7gu92i", "name": "SPRINT5 CERT TESTE EDITADO" }
+    ],
+    "plants": [
+      { "id": "cmuigi1iu0009tyagzdzvz1q2", "name": "SPRINT5 CERT USINA LEGADA" },
+      { "id": "cmuigi1sm000ftyagt2ysvs0s", "name": "SPRINT5 CERT USINA B" },
+      { "id": "cmuigi1kb000btyag05i5kfdi", "name": "SPRINT5 CERT USINA" }
+    ],
+    "note": "Remoção futura somente após inventário de dependências; não impacta José/Ulisses."
+  },
+  "gapsForImplementation": [
+    {
+      "id": "ENRICH_PLANT_MONITORING_KPIS",
+      "severity": "FIXED",
+      "touch": ["monitoring.service.ts", "monitoring.history.service.ts"]
+    },
+    {
+      "id": "ENRICH_PLANT_DETAIL_INCLUDE",
+      "severity": "FIXED",
+      "touch": ["plants.service.ts"]
+    },
+    {
+      "id": "CENTRAL_USINA_UX",
+      "severity": "FIXED",
+      "touch": ["apps/web/src/app/usinas/[id]/page.tsx"]
+    },
+    {
+      "id": "INTEGRATION_STATE_PRESENTATION",
+      "severity": "FIXED",
+      "touch": ["apps/web/src/lib/integration-status.ts"]
+    },
+    {
+      "id": "BINDING_PRODUCT_API",
+      "severity": "BLOCKER_FOR_REAL_PLANT_OPS_UI",
+      "touch": [],
+      "change": "Não implementado nesta sprint (evitar inventar binding). Binding hoje: script auxsol-discovery-validation / seed. Próximo passo: API controlada que exige externalId oficial."
+    },
+    {
+      "id": "AUTH_SCOPE_CADASTRO",
+      "severity": "IMPORTANT_DOCUMENTED",
+      "touch": [],
+      "change": "Limitação arquitetural sem vazamento atual."
+    },
+    {
+      "id": "AUXSOL_LIVE_STATUS_ALARMS",
+      "severity": "HIGH_DOCUMENTED",
+      "touch": [],
+      "change": "Não alterar AUXSOL nesta sprint; status UNKNOWN intencional até contrato oficial de status/alarme."
+    },
+    {
+      "id": "CIRCUIT_BREAKER_COOLDOWN",
+      "severity": "MEDIUM_DOCUMENTED",
+      "touch": [],
+      "change": "Ausentes; retry BullMQ/Auxsol existem. Não criar motor paralelo nesta sprint."
+    }
+  ],
+  "protectedDomainsNotModified": [
+    "MonitoringReading schema",
+    "Alert Engine",
+    "Collector core behavior",
+    "AUXSOL adapter/auth/discovery",
+    "Scheduler",
+    "IntegrationEngine architecture"
+  ],
+  "subagentAudits": {
+    "monitoringIntegrationAuxsol": "ec5023cf-7aaa-4698-8830-fd6e00e3eaf5",
+    "authFrontendUx": "5255ca2f-52e1-4b5f-9ffa-a6010107567e"
+  }
+}

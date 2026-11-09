@@ -17,6 +17,8 @@ export function NavGlyph({ name }: { name: NavIcon }) {
       return <Icon><rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8M12 16v4" /></Icon>;
     case 'operation':
       return <Icon><circle cx="12" cy="12" r="3" /><path d="M12 3v2M12 19v2M5 12H3M21 12h-2M6.2 6.2l1.4 1.4M16.4 16.4l1.4 1.4M6.2 17.8l1.4-1.4M16.4 7.6l1.4-1.4" /></Icon>;
+    case 'energy':
+      return <Icon><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z" /></Icon>;
     case 'plant':
       return <Icon><path d="M4 20h16M6 20V10l6-5 6 5v10" /><path d="M10 20v-6h4v6" /></Icon>;
     case 'equipment':

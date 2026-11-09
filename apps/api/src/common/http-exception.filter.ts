@@ -6,6 +6,18 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 
+function resolveErrorCode(status: number, body: unknown): string {
+  if (body && typeof body === 'object' && 'code' in body) {
+    const semantic = (body as { code?: unknown }).code;
+    if (typeof semantic === 'string' && semantic.trim()) {
+      return semantic.trim();
+    }
+  }
+  if (status >= 500) return 'INTERNAL_SERVER_ERROR';
+  if (status === 404) return 'RESOURCE_NOT_FOUND';
+  return 'HTTP_ERROR';
+}
+
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
@@ -23,7 +35,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     response.status(status).json({
       statusCode: status,
-      code: status >= 500 ? 'INTERNAL_SERVER_ERROR' : status === 404 ? 'RESOURCE_NOT_FOUND' : 'HTTP_ERROR',
+      code: resolveErrorCode(status, body),
       message,
       path: request.url ?? null,
       requestId: request.requestId ?? null,

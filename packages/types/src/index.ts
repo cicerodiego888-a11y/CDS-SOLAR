@@ -83,21 +83,21 @@ export function getInverterManufacturerName(code: string): string {
 export const INVERTER_STATUS_LABELS: Record<InverterOperationalStatus, string> = {
   ONLINE: 'Online',
   OFFLINE: 'Offline',
-  WARNING: 'Atenção',
-  ERROR: 'Erro',
-  UNKNOWN: 'Desconhecido',
+  WARNING: 'Em atenção',
+  ERROR: 'Com erro',
+  UNKNOWN: 'Não identificado',
 };
 
 export const PLANT_STATUS_LABELS: Record<PlantStatus, string> = {
   ACTIVE: 'Ativa',
   INACTIVE: 'Inativa',
-  WARNING: 'Atenção',
+  WARNING: 'Em atenção',
   OFFLINE: 'Offline',
 };
 
 export const ALERT_SEVERITY_LABELS: Record<AlertSeverity, string> = {
   INFO: 'Informação',
-  WARNING: 'Atenção',
+  WARNING: 'Em atenção',
   CRITICAL: 'Crítico',
 };
 
@@ -114,7 +114,7 @@ export const INTEGRATION_STATUS_LABELS: Record<ManufacturerIntegrationStatus, st
 };
 
 export function getInverterStatusLabel(status?: string | null): string {
-  if (!status) return INVERTER_STATUS_LABELS.UNKNOWN;
+  if (!status) return 'Não disponível';
   return INVERTER_STATUS_LABELS[status as InverterOperationalStatus] ?? INVERTER_STATUS_LABELS.UNKNOWN;
 }
 

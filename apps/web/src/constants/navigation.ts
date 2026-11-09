@@ -5,6 +5,8 @@ export const NAV_ITEMS = [
   { href: '/', label: 'Painel', permission: 'DASHBOARD_VIEW', group: 'Operação', icon: 'panel' },
   { href: '/monitoramento', label: 'Monitoramento', permission: 'MONITORING_VIEW', group: 'Operação', icon: 'monitor' },
   { href: '/operacao', label: 'Operação', permission: 'MONITORING_VIEW', group: 'Operação', icon: 'operation' },
+  { href: '/gestao-energia', label: 'Gestão de Energia', permission: 'ENERGY_VIEW', group: 'Operação', icon: 'energy' },
+  { href: '/gestao-energia/rateios', label: 'Rateio', permission: 'ENERGY_VIEW', group: 'Operação', icon: 'energy' },
   { href: '/usinas', label: 'Usinas', permission: 'PLANTS_VIEW', group: 'Ativos', icon: 'plant' },
   { href: '/equipamentos', label: 'Equipamentos', permission: 'EQUIPMENT_VIEW', group: 'Ativos', icon: 'equipment' },
   { href: '/inversores', label: 'Inversores', permission: 'INVERTERS_VIEW', group: 'Ativos', icon: 'inverter' },

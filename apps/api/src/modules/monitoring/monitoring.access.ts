@@ -62,7 +62,15 @@ export class MonitoringAccessService {
   async assertPlant(id: string, user: JwtPayload) {
     const plant = await this.prisma.plant.findUnique({
       where: { id },
-      include: { customer: true, inverters: true },
+      include: {
+        customer: true,
+        inverters: {
+          include: {
+            manufacturerRef: true,
+            bindings: true,
+          },
+        },
+      },
     });
     if (!plant) throw new NotFoundException('Usina não encontrada.');
     await this.authorization.assertPlantAccess(user, plant);

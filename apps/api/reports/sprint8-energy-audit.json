@@ -1,0 +1,70 @@
+{
+  "sprint": 8,
+  "title": "Fundação da Gestão de Energia — auditoria pré-código",
+  "generatedAt": "2026-09-26T15:28:00.000Z",
+  "domainDocsRead": [
+    "docs/architecture/domain-spec-v2.1.md",
+    "docs/architecture/domain-decisions-v2.2.md",
+    "docs/architecture/domain-distributor-uc-d3-d4-audit.md",
+    "docs/architecture/plant-consumer-unit-legacy-audit.md",
+    "docs/architecture/sprint7-binding.md",
+    "docs/architecture/domain-energy-rateio-4.2.md",
+    "docs/architecture/domain-energy-rateio-4.3-BLOCKED.md"
+  ],
+  "questions": {
+    "1_energy_management_domain": false,
+    "2_energy_model": false,
+    "3_energy_calculation_service": "partial — monitoring.energy.aggregateEnergyHistory exists inside Monitoring",
+    "4_energy_api": false,
+    "5_energy_ui": false,
+    "6_monitoringReading_sufficient_for_foundation": true,
+    "7_fields_consumable_without_schema_change": [
+      "collectedAt",
+      "energyTodayKwh",
+      "energyTotalKwh",
+      "energyMonthKwh (persisted; aggregation prefers ENERGY_TOTAL then ENERGY_TODAY)",
+      "powerKw (NOT used as energy)"
+    ],
+    "8_commercial_rules_in_monitoring": false,
+    "9_rateio_credit_balance_refs": "documented only; Rateio blocked until later sprint; do not implement"
+  },
+  "existingConcepts": {
+    "MonitoringReading": "EXISTS — telemetry source",
+    "aggregateEnergyHistory": "EXISTS in monitoring.energy.ts — kWh deltas; hasData; never power→energy",
+    "MonitoringHistoryService": "EXISTS — period/timezone/authorization for history",
+    "Distributor_Consumer_ConsumerUnit": "EXISTS — cadastro energético mínimo 4.1",
+    "energy_module_folder": "README only — no services"
+  },
+  "missingConcepts": [
+    "EnergyManagement bounded context API",
+    "Energy UI route",
+    "EnergyPeriod persisted entity",
+    "Rateio",
+    "Credit",
+    "Compensation",
+    "MonthlyBalance",
+    "Billing"
+  ],
+  "createThisSprint": [
+    "EnergyManagementService (consumes MonitoringHistoryService)",
+    "GET /api/energy/plants/:plantId/summary",
+    "GET /api/energy/plants/:plantId/generation",
+    "Frontend /gestao-energia",
+    "ENERGY_VIEW permission (code catalog only)"
+  ],
+  "explicitlyDeferred": [
+    "EnergyPeriod table/migration",
+    "Rateio / Allocation",
+    "Credit / CreditLedger",
+    "Compensation",
+    "MonthlyBalance definitive",
+    "Faturamento / Cobrança",
+    "Distributor integration API",
+    "ConsumerEnergyProfile"
+  ],
+  "migrationDecision": {
+    "create": false,
+    "rationale": "Geração por período já é derivável de MonitoringReading via aggregateEnergyHistory. Persistência de EnergyPeriod não é necessária para a fundação de consulta."
+  },
+  "whyNotDuplicateMonitoringReading": "Podemos consultar e agregar MonitoringReading com hasData/energyKwh/source/unit já validados. Duplicar leituras criaria segundo motor e risco de divergência."
+}

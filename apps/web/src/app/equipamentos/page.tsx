@@ -119,37 +119,55 @@ function EquipamentosContent() {
 
   const plantInverters = inverters.filter((item) => item.plantId === form.plantId);
   const showInverterLink = form.type === 'GATEWAY' || form.type === 'DATALOGGER' || form.type === 'INVERSOR';
+  const canCreate = can(user, 'EQUIPMENT_CREATE');
+  const hasActiveFilter = Boolean(filters.plantId || filters.type || filters.status);
+  const emptyContent = hasActiveFilter
+    ? <EmptyState title="Nenhum equipamento encontrado" description="Nenhum equipamento corresponde aos filtros atuais." />
+    : (
+      <EmptyState
+        title="Não existem equipamentos cadastrados"
+        description="Cadastre equipamentos vinculados a uma usina."
+        action={canCreate ? <Button type="button" onClick={openCreate}>Novo equipamento</Button> : undefined}
+      />
+    );
 
   return (
-    <div className="shell">
-      <PageHeader title="Equipamentos" description="Inventário operacional das usinas, sem lógica específica de fabricante." />
+    <div className="shell equipment-page">
+      <PageHeader
+        eyebrow="Ativos"
+        title="Equipamentos"
+        description="Inventário operacional das usinas, sem lógica específica de fabricante."
+        actions={canCreate ? <Button type="button" onClick={openCreate}>Novo equipamento</Button> : null}
+      />
       {error ? <ErrorMessage message={error} /> : null}
       {!rows && !error ? <LoadingState message="Carregando equipamentos..." /> : null}
       {rows ? (
-        <section className="panel">
-          <div className="toolbar">
+        <section className="equipment-panel">
+          <div className="toolbar equipment-toolbar">
             <div className="toolbar-filters">
               <SelectField id="eq-usina" label="Usina" value={filters.plantId} options={plants.map((item) => ({ value: item.id, label: item.name }))} placeholder="Todas" onChange={(plantId) => setFilters({ ...filters, plantId })} />
               <SelectField id="eq-tipo" label="Tipo" value={filters.type} options={EQUIPMENT_TYPE_OPTIONS} placeholder="Todos" onChange={(type) => setFilters({ ...filters, type })} />
               <SelectField id="eq-status" label="Status" value={filters.status} options={RECORD_STATUS_OPTIONS} placeholder="Todos" onChange={(status) => setFilters({ ...filters, status })} />
             </div>
-            {can(user, 'EQUIPMENT_CREATE') ? <Button onClick={openCreate}>Novo equipamento</Button> : null}
+            <p className="equipment-count" aria-live="polite">
+              {rows.length} equipamento{rows.length === 1 ? '' : 's'}
+            </p>
           </div>
           <DataTable
             rows={rows}
             rowKey={(row) => row.id}
             columns={[
-              { key: 'name', header: 'Equipamento', render: (row) => row.model || equipmentTypeLabel(row.type) },
-              { key: 'type', header: 'Tipo', render: (row) => equipmentTypeLabel(row.type) },
-              { key: 'plant', header: 'Usina', render: (row) => <Link href={`/usinas/${row.plantId}`}>{row.plant?.name || '—'}</Link> },
+              { key: 'name', header: 'Equipamento', render: (row) => <span className="equipment-name">{row.model || equipmentTypeLabel(row.type)}</span> },
+              { key: 'type', header: 'Tipo', render: (row) => <span className="equipment-type-tag">{equipmentTypeLabel(row.type)}</span> },
+              { key: 'plant', header: 'Usina', render: (row) => <Link className="equipment-link" href={`/usinas/${row.plantId}`}>{row.plant?.name || '—'}</Link> },
               { key: 'manufacturer', header: 'Fabricante', render: (row) => row.manufacturerName || '—' },
               { key: 'model', header: 'Modelo', render: (row) => row.model || '—' },
-              { key: 'serial', header: 'Número de série', render: (row) => row.serialNumber },
+              { key: 'serial', header: 'Número de série', render: (row) => <code className="equipment-serial">{row.serialNumber}</code> },
               {
                 key: 'inverter',
                 header: 'Inversor associado',
                 render: (row) => row.inverterId
-                  ? <Link href={`/inversores/${row.inverterId}`}>{row.inverter?.serialNumber || row.inverter?.model || 'Ver inversor'}</Link>
+                  ? <Link className="equipment-link" href={`/inversores/${row.inverterId}`}>{row.inverter?.serialNumber || row.inverter?.model || 'Ver inversor'}</Link>
                   : '—',
               },
               { key: 'status', header: 'Status', render: (row) => <StatusBadge label={recordStatusLabel(row.status)} status={row.status} /> },
@@ -158,18 +176,23 @@ function EquipamentosContent() {
                 header: 'Ações',
                 render: (row) => (
                   <div className="actions-cell">
-                    {can(user, 'EQUIPMENT_UPDATE') ? <Button variant="secondary" onClick={() => openEdit(row)}>Editar</Button> : null}
-                    {can(user, 'EQUIPMENT_UPDATE') ? <Button variant="ghost" onClick={() => void toggleStatus(row)}>{row.status === 'ACTIVE' ? 'Inativar' : 'Ativar'}</Button> : null}
+                    {can(user, 'EQUIPMENT_UPDATE') ? <Button type="button" variant="secondary" onClick={() => openEdit(row)}>Editar</Button> : null}
+                    {can(user, 'EQUIPMENT_UPDATE') ? (
+                      <Button type="button" variant="ghost" onClick={() => void toggleStatus(row)}>
+                        {row.status === 'ACTIVE' ? 'Inativar' : 'Ativar'}
+                      </Button>
+                    ) : null}
                   </div>
                 ),
               },
             ]}
-            empty={<EmptyState title="Nenhum registro encontrado" description="Cadastre equipamentos vinculados a uma usina." />}
+            empty={emptyContent}
           />
         </section>
       ) : null}
       <Modal open={open} title={editing ? 'Editar equipamento' : 'Novo equipamento'} error={formError} onClose={close} onConfirm={() => void save()}>
         <div className="form-grid">
+          <p className="equipment-form-section">Vínculo</p>
           <SelectField id="eq-form-usina" label="Usina" value={form.plantId} options={plants.map((item) => ({ value: item.id, label: item.name }))} placeholder="Selecione a usina" onChange={(plantId) => setForm({ ...form, plantId, inverterId: '' })} />
           <SelectField id="eq-form-tipo" label="Tipo" value={form.type} options={EQUIPMENT_TYPE_OPTIONS} onChange={(type) => setForm({ ...form, type, inverterId: type === 'GATEWAY' || type === 'DATALOGGER' || type === 'INVERSOR' ? form.inverterId : '' })} />
           {showInverterLink ? (
@@ -182,12 +205,15 @@ function EquipamentosContent() {
                 label: [item.serialNumber, item.model].filter(Boolean).join(' · ') || item.id,
               }))}
               placeholder="Opcional — selecione o inversor"
+              hint="Vínculo opcional. Um equipamento pode existir sem inversor associado."
               onChange={(inverterId) => setForm({ ...form, inverterId })}
             />
           ) : null}
+          <p className="equipment-form-section">Dados técnicos</p>
           <TextField id="eq-fab" label="Fabricante" value={form.manufacturerName} onChange={(manufacturerName) => setForm({ ...form, manufacturerName })} />
           <TextField id="eq-mod" label="Modelo" value={form.model} onChange={(model) => setForm({ ...form, model })} />
           <TextField id="eq-serie" label="Número de série" value={form.serialNumber} onChange={(serialNumber) => setForm({ ...form, serialNumber })} />
+          <p className="equipment-form-section">Complemento</p>
           <TextField id="eq-obs" label="Observação" value={form.notes} onChange={(notes) => setForm({ ...form, notes })} />
           {!editing ? <SelectField id="eq-form-status" label="Status" value={form.status} options={RECORD_STATUS_OPTIONS} onChange={(status) => setForm({ ...form, status })} /> : null}
         </div>

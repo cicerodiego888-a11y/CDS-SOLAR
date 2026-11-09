@@ -1,9 +1,22 @@
-# energy
+# energy — Gestão de Energia (bounded context)
 
-Cadastro energético mínimo (Domínio 4.1) implementado em módulos dedicados:
+## Sprint 8 — Geração
+- `EnergyManagementService` — geração por Plant
 
-- `../distributors` — Distributor
-- `../consumers` — Consumer
-- `../consumer-units` — ConsumerUnit (UC)
+## Sprint 9 — Consumo
+- `EnergyConsumptionService` — consumo por ConsumerUnit (fonte ainda indisponível)
 
-Rateio, créditos, compensação e billing **não** estão implementados.
+## Sprint 10 — Rateio versionado
+- `RateioService` — `EnergyRateioVersion` + `EnergyRateioLine`
+- API `/api/energy/plants/:plantId/rateios*`
+- Permissões: `ENERGY_VIEW` (leitura), `ENERGY_UPDATE` (mutação)
+- UI `/gestao-energia/rateios`
+
+## Sprint 11 — Alocação (kWh)
+- `EnergyAllocationService` — geração × % rateio → kWh por UC (calculado, sem migration)
+- `GET /api/energy/plants/:plantId/allocations`
+
+**Este Sprint implementa apenas ALOCAÇÃO ENERGÉTICA.**  
+Compensação, Créditos, Saldo e Faturamento permanecem fora do escopo.
+
+**Gestão de Energia não modifica o domínio de Monitoramento.**

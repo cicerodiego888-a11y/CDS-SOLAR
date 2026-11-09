@@ -267,11 +267,18 @@ export function sumLatestPowerKw(latest: Array<{ powerKw?: unknown }>) {
   };
 }
 
-export function sumLatestEnergyTotal(latest: Array<{ energyTotalKwh?: unknown }>) {
-  const values = latest.map((item) => toNumber(item.energyTotalKwh as never));
+export function sumLatestEnergyField(
+  latest: Array<Record<string, unknown>>,
+  field: 'energyTodayKwh' | 'energyMonthKwh' | 'energyTotalKwh',
+) {
+  const values = latest.map((item) => toNumber(item[field] as never));
   const present = values.filter((value): value is number => value !== null);
   return {
     valueKwh: present.length ? Number(present.reduce((sum, value) => sum + value, 0).toFixed(3)) : null,
     hasData: present.length > 0,
   };
+}
+
+export function sumLatestEnergyTotal(latest: Array<{ energyTotalKwh?: unknown }>) {
+  return sumLatestEnergyField(latest as Array<Record<string, unknown>>, 'energyTotalKwh');
 }

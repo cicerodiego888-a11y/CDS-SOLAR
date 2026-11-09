@@ -103,52 +103,103 @@ export default function ClientesPage() {
     await load();
   }
 
+  const emptyContent = search.trim()
+    ? <EmptyState title="Nenhum cliente encontrado" description="Nenhum registro corresponde à busca atual." />
+    : <EmptyState title="Nenhum registro encontrado" description="Cadastre o primeiro cliente para vincular usinas." />;
+
   return (
-    <div className="shell">
-      <PageHeader title="Clientes" description="Cadastro operacional dos clientes da B7 Solar." />
+    <div className="shell customers-page">
+      <PageHeader
+        eyebrow="Cadastros"
+        title="Clientes"
+        description="Cadastro operacional dos clientes da B7 Solar."
+        actions={can(user, 'CUSTOMERS_CREATE') ? <Button type="button" onClick={openNew}>Novo cliente</Button> : null}
+      />
+
       {error ? <ErrorMessage message={error} /> : null}
       {!rows && !error ? <LoadingState message="Carregando clientes..." /> : null}
+
       {rows ? (
-        <section className="panel">
-          <div className="toolbar">
+        <section className="customers-panel">
+          <div className="toolbar customers-toolbar">
             <div className="toolbar-filters">
-              <TextField id="busca-cliente" label="Buscar" value={search} onChange={setSearch} placeholder="Nome, documento ou e-mail" />
+              <TextField
+                id="busca-cliente"
+                label="Buscar"
+                value={search}
+                onChange={setSearch}
+                placeholder="Nome, documento ou e-mail"
+              />
             </div>
-            {can(user, 'CUSTOMERS_CREATE') ? <Button onClick={openNew}>Novo cliente</Button> : null}
+            <p className="customers-count" aria-live="polite">
+              {filtered.length} de {rows.length} cliente{rows.length === 1 ? '' : 's'}
+            </p>
           </div>
           <DataTable
             rows={filtered}
             rowKey={(row) => row.id}
             columns={[
-              { key: 'name', header: 'Cliente', render: (row) => <Link href={`/clientes/${row.id}`}>{row.name}</Link> },
+              {
+                key: 'name',
+                header: 'Cliente',
+                render: (row) => (
+                  <Link className="customers-name-link" href={`/clientes/${row.id}`}>{row.name}</Link>
+                ),
+              },
               { key: 'document', header: 'Documento', render: (row) => row.document || '—' },
               { key: 'phone', header: 'Telefone', render: (row) => row.phone || '—' },
               { key: 'email', header: 'E-mail', render: (row) => row.email || '—' },
               { key: 'plants', header: 'Usinas', render: (row) => row._count?.plants ?? 0 },
-              { key: 'status', header: 'Status', render: (row) => <StatusBadge label={recordStatusLabel(row.status)} status={row.status} /> },
+              {
+                key: 'status',
+                header: 'Status',
+                render: (row) => <StatusBadge label={recordStatusLabel(row.status)} status={row.status} />,
+              },
               {
                 key: 'actions',
                 header: 'Ações',
                 render: (row) => (
                   <div className="actions-cell">
-                    {can(user, 'CUSTOMERS_UPDATE') ? <Button variant="secondary" onClick={() => openEdit(row)}>Editar</Button> : null}
-                    {can(user, 'CUSTOMERS_UPDATE') ? <Button variant="ghost" onClick={() => void toggleStatus(row)}>{row.status === 'ACTIVE' ? 'Inativar' : 'Ativar'}</Button> : null}
+                    {can(user, 'CUSTOMERS_UPDATE') ? (
+                      <Button type="button" variant="secondary" onClick={() => openEdit(row)}>Editar</Button>
+                    ) : null}
+                    {can(user, 'CUSTOMERS_UPDATE') ? (
+                      <Button type="button" variant="ghost" onClick={() => void toggleStatus(row)}>
+                        {row.status === 'ACTIVE' ? 'Inativar' : 'Ativar'}
+                      </Button>
+                    ) : null}
                   </div>
                 ),
               },
             ]}
-            empty={<EmptyState title="Nenhum registro encontrado" description="Cadastre o primeiro cliente para vincular usinas." />}
+            empty={emptyContent}
           />
         </section>
       ) : null}
 
-      <Modal open={open} title={editing ? 'Editar cliente' : 'Novo cliente'} error={formError} confirmDisabled={saving} onClose={close} onConfirm={() => void save()} confirmLabel={saving ? 'Salvando...' : 'Salvar'}>
+      <Modal
+        open={open}
+        title={editing ? 'Editar cliente' : 'Novo cliente'}
+        error={formError}
+        confirmDisabled={saving}
+        onClose={close}
+        onConfirm={() => void save()}
+        confirmLabel={saving ? 'Salvando...' : 'Salvar'}
+      >
         <div className="form-grid">
           <TextField id="nome" label="Nome" value={form.name} onChange={(name) => setForm({ ...form, name })} />
           <TextField id="documento" label="CPF/CNPJ" value={form.document} onChange={(document) => setForm({ ...form, document })} />
           <TextField id="email" label="E-mail" type="email" value={form.email} onChange={(email) => setForm({ ...form, email })} />
           <TextField id="telefone" label="Telefone" value={form.phone} onChange={(phone) => setForm({ ...form, phone })} />
-          {!editing ? <SelectField id="status" label="Status" value={form.status} options={RECORD_STATUS_OPTIONS} onChange={(status) => setForm({ ...form, status })} /> : null}
+          {!editing ? (
+            <SelectField
+              id="status"
+              label="Status"
+              value={form.status}
+              options={RECORD_STATUS_OPTIONS}
+              onChange={(status) => setForm({ ...form, status })}
+            />
+          ) : null}
         </div>
       </Modal>
     </div>

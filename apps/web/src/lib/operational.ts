@@ -1,4 +1,5 @@
 import type { AuthUser } from './auth-session';
+import { NORMALIZED_STATUS_LABELS } from './status-labels.ts';
 
 export const RECORD_STATUS_OPTIONS = [
   { value: 'ACTIVE', label: 'Ativo' },
@@ -33,8 +34,8 @@ export function recordStatusLabel(status?: string | null) {
 export function plantOperationalLabel(status?: string | null) {
   if (status === 'INACTIVE') return 'Inativa';
   if (status === 'ACTIVE') return 'Ativa';
-  if (status === 'WARNING') return 'Atenção';
-  if (status === 'OFFLINE') return 'Offline';
+  if (status === 'WARNING') return NORMALIZED_STATUS_LABELS.WARNING;
+  if (status === 'OFFLINE') return NORMALIZED_STATUS_LABELS.OFFLINE;
   return status || '—';
 }
 

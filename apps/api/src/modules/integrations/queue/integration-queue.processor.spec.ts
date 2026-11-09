@@ -1,6 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { UnrecoverableError } from 'bullmq';
-import { collectionFailed, integrationBlocked } from '../collection/collection.errors';
+import { collectionFailed, concurrentCollection, integrationBlocked } from '../collection/collection.errors';
 import { IntegrationQueueProcessor } from './integration-queue.processor';
 
 function job(data: Record<string, unknown>) {
@@ -31,7 +31,15 @@ describe('IntegrationQueueProcessor', () => {
     expect(result).toMatchObject({ ok: false, code: 'INTEGRATION_BLOCKED', persisted: 0 });
   });
 
-  it('propaga falha recuperável para o retry do BullMQ', async () => {
+  it('9) CONCURRENT_COLLECTION conclui sem retry repetitivo', async () => {
+    const collectInverter = jest.fn().mockRejectedValue(concurrentCollection());
+    const processor = new IntegrationQueueProcessor({} as never, { collectInverter } as never);
+    const result = await processor.process(job({ inverterId: 'i1' }) as never);
+    expect(result).toMatchObject({ ok: false, code: 'CONCURRENT_COLLECTION', persisted: 0 });
+    expect(collectInverter).toHaveBeenCalledTimes(1);
+  });
+
+  it('10) propaga falha recuperável para o retry do BullMQ', async () => {
     const processor = new IntegrationQueueProcessor({} as never, {
       collectInverter: jest.fn().mockRejectedValue(collectionFailed()),
     } as never);

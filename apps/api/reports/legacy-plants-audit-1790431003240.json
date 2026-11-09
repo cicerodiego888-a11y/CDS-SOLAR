@@ -1,0 +1,46 @@
+{
+  "generatedAt": "2026-09-26T13:56:43.240Z",
+  "totals": {
+    "plants": 2,
+    "withLegacyConsumerUnit": 2,
+    "withLegacyDistributor": 2,
+    "withoutFormalConsumerUnit": 2,
+    "customerHasConsumer": 0,
+    "safeMatchCandidates": 0,
+    "insufficientInfo": 2,
+    "HAS_FORMAL_LINK": 0,
+    "LEGACY_UC_ONLY": 0,
+    "LEGACY_DISTRIBUTOR_ONLY": 0,
+    "NO_ENERGY_INFO": 0,
+    "SAFE_MATCH_CANDIDATE": 0,
+    "AMBIGUOUS_OR_INSUFFICIENT": 2
+  },
+  "items": [
+    {
+      "plantId": "cmube71va0001tyi0i6d0f8ll",
+      "plantName": "José Bezerra Sobrinho",
+      "customerId": "cmu7lkkmu0000tyus5j0u824g",
+      "customerName": "José Bezerra Sobrinho",
+      "legacyConsumerUnit": "11230436",
+      "legacyDistributor": "Equatorial",
+      "consumerUnitId": null,
+      "customerHasConsumer": false,
+      "consumerId": null,
+      "safeMatchConsumerUnitId": null,
+      "category": "AMBIGUOUS_OR_INSUFFICIENT"
+    },
+    {
+      "plantId": "cmucots7g0007tymccjpscinm",
+      "plantName": "Ulisses Lima",
+      "customerId": "cmucom31o0005tymcu7cgt9d3",
+      "customerName": "Ulisses Lima",
+      "legacyConsumerUnit": "003005596601",
+      "legacyDistributor": "Equatorial",
+      "consumerUnitId": null,
+      "customerHasConsumer": false,
+      "consumerId": null,
+      "safeMatchConsumerUnitId": null,
+      "category": "AMBIGUOUS_OR_INSUFFICIENT"
+    }
+  ]
+}

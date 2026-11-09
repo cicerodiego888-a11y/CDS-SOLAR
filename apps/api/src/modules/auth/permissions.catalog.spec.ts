@@ -35,4 +35,19 @@ describe('Catálogo de perfis e permissões', () => {
     expect(hasPermission('OPERADOR', 'DISTRIBUTORS_CREATE')).toBe(false);
     expect(hasPermission('CONSUMIDOR', 'CONSUMER_UNITS_VIEW')).toBe(false);
   });
+
+  it('concede ENERGY_VIEW à fundação de Gestão de Energia', () => {
+    expect(hasPermission('ADMINISTRADOR', 'ENERGY_VIEW')).toBe(true);
+    expect(hasPermission('OPERADOR', 'ENERGY_VIEW')).toBe(true);
+    expect(hasPermission('COMERCIAL', 'ENERGY_VIEW')).toBe(true);
+    expect(hasPermission('INVESTIDOR', 'ENERGY_VIEW')).toBe(false);
+  });
+
+  it('concede ENERGY_UPDATE para mutações de Rateio', () => {
+    expect(hasPermission('ADMIN', 'ENERGY_UPDATE')).toBe(true);
+    expect(hasPermission('OPERADOR', 'ENERGY_UPDATE')).toBe(true);
+    expect(hasPermission('COMERCIAL', 'ENERGY_UPDATE')).toBe(true);
+    expect(hasPermission('TECNICO', 'ENERGY_UPDATE')).toBe(false);
+    expect(hasPermission('POS_VENDA', 'ENERGY_UPDATE')).toBe(false);
+  });
 });

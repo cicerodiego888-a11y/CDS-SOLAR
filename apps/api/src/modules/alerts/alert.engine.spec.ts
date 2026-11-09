@@ -149,6 +149,27 @@ describe('MonitoringAlertService', () => {
     expect(prisma.alerts[0].ruleCode).toBe(ALERT_RULE.NO_RECENT_READING);
   });
 
+  it('NO_RECENT_READING usa lastSyncAt quando não há leitura persistida', async () => {
+    const prisma = createPrisma();
+    const recent = new Date();
+    prisma.inverter.findMany = jest.fn().mockResolvedValue([{
+      id: 'inv-a',
+      model: 'ASN-10SL',
+      plantId: 'plant-1',
+      manufacturer: 'AUXSOL',
+      status: 'ACTIVE',
+      plant: { name: 'Ulisses', customerId: 'c1', customer: { name: 'Ulisses' } },
+      manufacturerRef: { code: 'AUXSOL' },
+      bindings: [{ id: 'b1', provider: 'AUXSOL', status: 'READY', lastSyncAt: recent }],
+      readings: [],
+    }]);
+    const engine = new MonitoringAlertService(prisma as never);
+    jest.spyOn(engine, 'resolveCollectability').mockReturnValue('COLLECTABLE');
+    await engine.evaluateAbsenceForEligible();
+    // lastSyncAt recente impede open; sem persistido também não resolve (nada a resolver).
+    expect(prisma.alerts).toHaveLength(0);
+  });
+
   it('regra desconhecida não quebra o motor', async () => {
     const prisma = createPrisma();
     const engine = new MonitoringAlertService(prisma as never);

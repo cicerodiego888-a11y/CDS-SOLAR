@@ -25,6 +25,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     return result;
   }, [user]);
 
+  /** Busca visual do topbar — sem fluxo global (comportamento preservado). */
   function onSearch(event: FormEvent) {
     event.preventDefault();
   }
@@ -66,18 +67,22 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
       <div className="app-main">
-        <div className="topbar">
+        <header className="topbar">
           <form className="search" onSubmit={onSearch} role="search">
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Buscar usinas, clientes ou equipamentos..."
               aria-label="Buscar usinas, clientes ou equipamentos"
+              autoComplete="off"
             />
           </form>
           <div className="topbar-actions">
-            <button type="button" className="icon-btn" aria-label="Notificações">
-              <span aria-hidden="true">●</span>
+            <button type="button" className="icon-btn" aria-label="Notificações" title="Notificações">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                <path d="M6 9a6 6 0 0 1 12 0c0 7 3 7 3 7H3s3 0 3-7" />
+                <path d="M10 19a2 2 0 0 0 4 0" />
+              </svg>
             </button>
             <div className="user-chip">
               <span className="avatar" aria-hidden="true">{initials}</span>
@@ -89,9 +94,15 @@ export function AppShell({ children }: { children: ReactNode }) {
             <button type="button" className="ui-button ui-button-secondary" onClick={logout}>
               Sair
             </button>
-            <span className="status" title={APP_PRODUCT}>Sistema operacional</span>
+            <span
+              className="shell-system-chip"
+              title={APP_PRODUCT}
+              aria-label={`${APP_PRODUCT} — rótulo estático do produto`}
+            >
+              Sistema operacional
+            </span>
           </div>
-        </div>
+        </header>
         <main className="content">{children}</main>
       </div>
     </div>

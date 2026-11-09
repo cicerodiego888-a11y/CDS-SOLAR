@@ -2,6 +2,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/http-exception.filter';
+import { assertProductionJwtConfiguration } from './modules/auth/jwt-secrets';
 
 function corsOrigins() {
   const configured = process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:3002';
@@ -13,9 +14,7 @@ function corsOrigins() {
 }
 
 async function bootstrap() {
-  if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'dev-secret')) {
-    throw new Error('JWT_SECRET forte é obrigatório em produção.');
-  }
+  assertProductionJwtConfiguration();
   const app = await NestFactory.create(AppModule);
   app.enableCors({
     origin: corsOrigins(),

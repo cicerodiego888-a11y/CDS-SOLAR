@@ -1,0 +1,110 @@
+{
+  "sprint": "SPRINT 9",
+  "title": "Consumo Energético e Base do Balanço",
+  "generatedAt": "2026-09-26T16:05:00.000Z",
+  "reference": {
+    "lumiPdfUsed": true,
+    "lumiPdfInRepo": false,
+    "usage": "functional_reference_only",
+    "statement": "Este Sprint utiliza a apresentação da Lumi como referência funcional, não como especificação técnica ou regulatória do B7 Solar."
+  },
+  "baseline": {
+    "file": "apps/api/reports/sprint9-consumption-baseline.json",
+    "apiHealth": "ok",
+    "database": "ok",
+    "redis": "ok",
+    "apiTests": 451,
+    "webTests": 38,
+    "lint": "PASS",
+    "build": "PASS",
+    "prismaValidate": "PASS",
+    "migrations": 12
+  },
+  "audit": {
+    "file": "apps/api/reports/sprint9-consumption-audit.json",
+    "consumptionModelExisted": false,
+    "persistedConsumption": false,
+    "consumptionEndpointExisted": false,
+    "monitoringReadingHasUcConsumption": false,
+    "distributorIntegrationForConsumption": false,
+    "migrationRequiredNow": false
+  },
+  "domainDecision": {
+    "generationEqualsConsumption": false,
+    "consumptionOwner": "ConsumerUnit",
+    "plantOwnsConsumption": false,
+    "customerOwnsConsumption": false,
+    "persistEnergyConsumptionRecord": "DEFERRED_UNTIL_REAL_SOURCE",
+    "defaultAvailability": "UNAVAILABLE"
+  },
+  "implementation": {
+    "service": "EnergyConsumptionService",
+    "store": "UnavailableEnergyConsumptionStore",
+    "balanceFoundation": true,
+    "doesNotCalculate": ["rateio", "creditos", "compensacao", "faturamento", "economia"]
+  },
+  "api": {
+    "endpoints": [
+      "GET /api/energy/consumer-units/:consumerUnitId/consumption",
+      "GET /api/energy/consumer-units/:consumerUnitId/consumption/summary",
+      "GET /api/energy/plants/:plantId/consumer-units/consumption",
+      "GET /api/energy/consumer-units/:consumerUnitId/balance-foundation"
+    ],
+    "emptyContract": { "hasData": false, "consumption": null },
+    "unit": "kWh"
+  },
+  "frontend": {
+    "route": "/gestao-energia",
+    "sections": ["Geração da Usina", "Consumo das UCs"],
+    "emptyDisplay": "—"
+  },
+  "authorization": {
+    "jwt": true,
+    "permission": "ENERGY_VIEW",
+    "ucAccess": "assertConsumerUnitAccess (customer or linked plant scope)"
+  },
+  "monitoringImpact": {
+    "changed": false,
+    "statement": "Gestão de Energia não modifica o domínio de Monitoramento."
+  },
+  "auxsolImpact": {
+    "changed": false
+  },
+  "realDataImpact": {
+    "joseAltered": false,
+    "ulissesAltered": false,
+    "fictitiousConsumptionPersisted": false,
+    "fixturesOnlyInTests": true
+  },
+  "database": {
+    "migrationCreated": false,
+    "migrationExecuted": false,
+    "migrationsCount": 12,
+    "upToDate": true
+  },
+  "tests": {
+    "apiSuites": 65,
+    "apiPassed": 467,
+    "webPassed": 38,
+    "generationNotEqualsConsumption": true,
+    "absenceNotZero": true,
+    "lint": "PASS",
+    "build": "PASS",
+    "prismaValidate": "PASS"
+  },
+  "pending": [
+    "EnergyConsumptionRecord migration quando houver fonte real",
+    "Ingestão DISTRIBUTOR/METER/IMPORT/MANUAL",
+    "Sprint 10 Rateio Versionado",
+    "Créditos + Compensação",
+    "Balanço Mensal definitivo",
+    "Faturamento / Cobrança / integração distribuidora"
+  ],
+  "decision": "APPROVED_WITH_PENDING",
+  "docs": [
+    "docs/architecture/sprint9-consumption.md",
+    "apps/api/reports/sprint9-consumption-baseline.json",
+    "apps/api/reports/sprint9-consumption-audit.json",
+    "apps/api/reports/sprint9-consumption-final.json"
+  ]
+}

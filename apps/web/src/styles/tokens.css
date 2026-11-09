@@ -1,0 +1,225 @@
+/**
+ * B7 Solar — Design Tokens V2
+ *
+ * Fundação visual centralizada. Componentes e telas devem preferir tokens
+ * semânticos (--color-*, --font-size-*, --space-*, etc.).
+ *
+ * Aliases legados (--bg, --text, --surface, --primary, …) permanecem
+ * estáveis para coexistência gradual. Não redesenha telas neste arquivo.
+ */
+
+:root {
+  /* --------------------------------------------------------------------------
+   * PRIMITIVES — paleta bruta (referência interna)
+   * Preferir tokens semânticos em CSS de componente.
+   * ------------------------------------------------------------------------ */
+  --navy-950: #050b14;
+  --navy-900: #07111d;
+  --navy-800: #0c1829;
+  --navy-700: #12233a;
+
+  --blue-600: #2563eb;
+  --blue-500: #3b82f6;
+  --blue-400: #60a5fa;
+  --green-500: #22c55e;
+  --green-400: #4ade80;
+  --amber-500: #f59e0b;
+  --red-500: #ef4444;
+  --sky-400: #38bdf8;
+  --slate-400: #94a3b8;
+  --slate-300: #cbd5e1;
+
+  /* --------------------------------------------------------------------------
+   * PAGE
+   * ------------------------------------------------------------------------ */
+  --color-bg-page: #07111d;
+  --color-bg-elevated: #0b1626;
+  --color-bg-sidebar: #081526;
+  --color-bg-topbar: rgba(7, 17, 29, 0.82);
+
+  /* --------------------------------------------------------------------------
+   * SURFACES
+   * PAGE → SURFACE → RAISED → HOVER/ACTIVE
+   * ------------------------------------------------------------------------ */
+  --color-surface: #101c2e;
+  --color-surface-raised: #152338;
+  --color-surface-hover: #1b2c44;
+  --color-surface-active: #1f334f;
+  --color-surface-disabled: #0e1a2b;
+
+  /* --------------------------------------------------------------------------
+   * TEXT — hierarquia
+   * PRIMARY > SECONDARY > TERTIARY > DISABLED / PLACEHOLDER
+   * ------------------------------------------------------------------------ */
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #c5d0e0;
+  --color-text-tertiary: #8b9bb3;
+  --color-text-disabled: #64748b;
+  --color-text-placeholder: #7a8ba3;
+  --color-text-inverse: #ffffff;
+  --color-text-on-brand: #ffffff;
+
+  /* --------------------------------------------------------------------------
+   * BORDER
+   * ------------------------------------------------------------------------ */
+  --color-border-subtle: rgba(148, 163, 184, 0.1);
+  --color-border: rgba(148, 163, 184, 0.16);
+  --color-border-strong: rgba(148, 163, 184, 0.28);
+  --color-border-focus: #3b82f6;
+
+  /* --------------------------------------------------------------------------
+   * BRAND
+   * Azul = ação/informação · Verde = energia/solar
+   * ------------------------------------------------------------------------ */
+  --color-brand-primary: #2563eb;
+  --color-brand-primary-hover: #3b82f6;
+  --color-brand-secondary: #22c55e;
+  --color-brand-accent: #3b82f6;
+  --color-brand-accent-strong: #60a5fa;
+  --color-brand-energy: #22c55e;
+  --color-brand-energy-bright: #4ade80;
+
+  /* --------------------------------------------------------------------------
+   * STATES
+   * ------------------------------------------------------------------------ */
+  --color-success: #22c55e;
+  --color-success-bg: rgba(34, 197, 94, 0.14);
+  --color-warning: #f59e0b;
+  --color-warning-bg: rgba(245, 158, 11, 0.14);
+  --color-danger: #ef4444;
+  --color-danger-bg: rgba(239, 68, 68, 0.14);
+  --color-info: #38bdf8;
+  --color-info-bg: rgba(56, 189, 248, 0.14);
+
+  /* --------------------------------------------------------------------------
+   * FOCUS
+   * :focus-visible usa --focus-ring (nunca remover outline sem substituição)
+   * ------------------------------------------------------------------------ */
+  --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.35);
+  --focus-ring-danger: 0 0 0 3px rgba(239, 68, 68, 0.35);
+
+  /* --------------------------------------------------------------------------
+   * TYPOGRAPHY
+   * Família: Plus Jakarta Sans (via --font-sans no layout)
+   * ------------------------------------------------------------------------ */
+  --font-family-sans: var(--font-sans), "Plus Jakarta Sans", Inter, Arial, sans-serif;
+
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.82rem;
+  --font-size-md: 0.95rem;
+  --font-size-lg: 1rem;
+  --font-size-xl: 1.15rem;
+  --font-size-2xl: 1.6rem;
+  --font-size-3xl: 1.85rem;
+
+  --line-height-tight: 1.2;
+  --line-height-snug: 1.35;
+  --line-height-normal: 1.5;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --letter-spacing-tight: -0.03em;
+  --letter-spacing-wide: 0.08em;
+  --letter-spacing-wider: 0.16em;
+
+  /* --------------------------------------------------------------------------
+   * SPACING (escala 4px)
+   * ------------------------------------------------------------------------ */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 40px;
+  --space-10: 48px;
+  --space-12: 64px;
+
+  /* --------------------------------------------------------------------------
+   * RADIUS
+   * ------------------------------------------------------------------------ */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --radius-full: 999px;
+
+  /* --------------------------------------------------------------------------
+   * SHADOWS (discretas no dark mode)
+   * ------------------------------------------------------------------------ */
+  --shadow-sm: 0 8px 24px rgba(2, 8, 20, 0.22);
+  --shadow-md: 0 12px 40px rgba(2, 8, 20, 0.35);
+  --shadow-lg: 0 20px 56px rgba(2, 8, 20, 0.45);
+
+  /* --------------------------------------------------------------------------
+   * MOTION
+   * ------------------------------------------------------------------------ */
+  --duration-fast: 100ms;
+  --duration-normal: 160ms;
+  --ease-standard: ease;
+  --ease-emphasized: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* --------------------------------------------------------------------------
+   * Z-INDEX
+   * ------------------------------------------------------------------------ */
+  --z-base: 0;
+  --z-dropdown: 10;
+  --z-sticky: 8;
+  --z-overlay: 20;
+  --z-modal: 30;
+  --z-toast: 40;
+
+  /* ==========================================================================
+   * LEGACY ALIASES — compatibilidade com globals.css e componentes atuais
+   * Não remover enquanto houver uso amplo no CSS legado.
+   * ======================================================================== */
+  --tech: var(--color-brand-accent);
+  --tech-strong: var(--color-brand-accent-strong);
+  --energy: var(--color-brand-energy);
+  --energy-bright: var(--color-brand-energy-bright);
+
+  --bg: var(--color-bg-page);
+  --bg-elevated: var(--color-bg-elevated);
+  --surface: var(--color-surface);
+  --surface-2: var(--color-surface-raised);
+  --surface-3: var(--color-surface-hover);
+
+  --border: var(--color-border);
+  --border-strong: var(--color-border-strong);
+
+  --text: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --muted: var(--color-text-tertiary);
+
+  --primary: var(--color-brand-primary);
+  --primary-hover: var(--color-brand-primary-hover);
+
+  --success: var(--color-success);
+  --success-bg: var(--color-success-bg);
+  --warning: var(--color-warning);
+  --warning-bg: var(--color-warning-bg);
+  --danger: var(--color-danger);
+  --danger-bg: var(--color-danger-bg);
+  --info: var(--color-info);
+  --info-bg: var(--color-info-bg);
+
+  --radius: var(--radius-md);
+  --shadow: var(--shadow-md);
+  --shadow-soft: var(--shadow-sm);
+
+  --text-display: var(--font-size-3xl);
+  --text-h1: var(--font-size-2xl);
+  --text-h2: var(--font-size-xl);
+  --text-h3: var(--font-size-lg);
+  --text-body: var(--font-size-md);
+  --text-small: var(--font-size-sm);
+  --text-caption: var(--font-size-xs);
+  --text-label: 0.78rem;
+
+  --font: var(--font-family-sans);
+  --focus: var(--focus-ring);
+  --ease: var(--duration-normal) var(--ease-standard);
+}

@@ -6,6 +6,7 @@ export class ApiError extends Error {
   constructor(
     public status: number,
     message: string,
+    public code?: string,
   ) {
     super(message);
   }
@@ -52,16 +53,28 @@ export async function fetchApi<T>(path: string, init?: RequestInit): Promise<T> 
     throw new ApiError(403, 'Você não possui permissão para acessar este recurso.');
   }
   if (!response.ok) {
-    throw new ApiError(response.status, await readApiMessage(response, 'Falha ao consultar a API'));
+    const parsed = await readApiError(response, 'Falha ao consultar a API');
+    throw new ApiError(response.status, parsed.message, parsed.code);
   }
   return response.json() as Promise<T>;
 }
 
+async function readApiError(response: Response, fallback: string) {
+  const body = await response.clone().json().catch(() => null) as {
+    message?: string | string[];
+    code?: string;
+  } | null;
+  const message = Array.isArray(body?.message)
+    ? body.message.join(' ')
+    : typeof body?.message === 'string'
+      ? body.message
+      : fallback;
+  const code = typeof body?.code === 'string' ? body.code : undefined;
+  return { message, code };
+}
+
 async function readApiMessage(response: Response, fallback: string) {
-  const body = await response.clone().json().catch(() => null) as { message?: string | string[] } | null;
-  if (Array.isArray(body?.message)) return body.message.join(' ');
-  if (typeof body?.message === 'string') return body.message;
-  return fallback;
+  return (await readApiError(response, fallback)).message;
 }
 
 export async function loginRequest(email: string, password: string) {

@@ -12,7 +12,16 @@ export interface AlertEvaluationContext {
   customerName?: string | null;
   status?: 'ONLINE' | 'OFFLINE' | 'WARNING' | 'ERROR' | 'UNKNOWN';
   collectedAt?: Date;
+  /**
+   * Última observação considerada para ausência (max válido persistido/lastSyncAt).
+   * Usada para decidir se há evidência recente (evitar falso positivo de open).
+   */
   lastReadingAt?: Date | null;
+  /**
+   * Última MonitoringReading.collectedAt válida do inversor.
+   * Somente evidência persistida autoriza resolve de NO_RECENT_READING na ausência.
+   */
+  persistedLastReadingAt?: Date | null;
   readingValid?: boolean;
   collectability: IntegrationCollectability;
   provider?: string;

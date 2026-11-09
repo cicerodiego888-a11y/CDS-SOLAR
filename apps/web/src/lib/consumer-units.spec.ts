@@ -7,6 +7,7 @@ import {
   otherConsumerUnitMessage,
   plantConsumerUnitDisplay,
   plantDistributorDisplay,
+  plantEnergyFieldMode,
   validateConsumerUnitForm,
 } from './consumer-units.ts';
 
@@ -67,6 +68,12 @@ describe('unidades consumidoras na UI', () => {
     );
     assert.equal(plantConsumerUnitDisplay({ consumerUnit: 'legado' }), 'legado');
     assert.equal(otherConsumerUnitMessage().includes('outro consumidor'), true);
+  });
+
+  it('não mostra campos legados antes de saber se o cliente tem UC', () => {
+    assert.equal(plantEnergyFieldMode(false, 0), 'loading');
+    assert.equal(plantEnergyFieldMode(true, 2), 'formal');
+    assert.equal(plantEnergyFieldMode(true, 0), 'legacy');
   });
 
   it('ausência de UC fica explícita', () => {

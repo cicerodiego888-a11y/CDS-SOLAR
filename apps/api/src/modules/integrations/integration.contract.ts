@@ -56,6 +56,27 @@ export type CollectionErrorCode =
   | 'PERSISTENCE_FAILED'
   | 'CONCURRENT_COLLECTION';
 
+/** Snapshot ao vivo para UI (sem raw sensível). Definido em live-reading.view.ts. */
+export type CollectionLiveReading = {
+  available: boolean;
+  unavailableReason: string | null;
+  collectedAt: string | null;
+  powerKw: number | null;
+  energyTodayKwh: number | null;
+  energyMonthKwh: number | null;
+  energyTotalKwh: number | null;
+  communicationOk: boolean | null;
+  status: string | null;
+  equipmentStatus: string | null;
+  lastCommAt: string | null;
+  alarms: {
+    present: boolean;
+    summary: string;
+    codes: Record<string, unknown> | null;
+  } | null;
+  persisted: boolean;
+};
+
 export interface CollectionResult {
   ok: boolean;
   inverterId: string;
@@ -70,6 +91,8 @@ export interface CollectionResult {
   durationMs: number;
   code?: CollectionErrorCode;
   message: string;
+  /** Leitura normalizada para exibição imediata (mesmo com persistência OFF). */
+  liveReading?: CollectionLiveReading | null;
 }
 
 export interface MonitoringConnector {

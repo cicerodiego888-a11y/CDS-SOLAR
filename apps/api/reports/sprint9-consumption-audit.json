@@ -1,0 +1,56 @@
+{
+  "sprint": 9,
+  "title": "Consumo Energético e Base do Balanço — auditoria pré-código",
+  "generatedAt": "2026-09-26T15:50:00.000Z",
+  "lumiPdf": {
+    "foundInRepo": false,
+    "usage": "functional_reference_only_via_domain_docs_v2.1_v2.2",
+    "statement": "Este Sprint utiliza a apresentação da Lumi como referência funcional, não como especificação técnica ou regulatória do B7 Solar."
+  },
+  "questions": {
+    "1_consumption_model": false,
+    "2_persisted_consumption_data": false,
+    "3_consumption_endpoint": false,
+    "4_formal_association_consumption_uc": false,
+    "5_consumption_calculation": false,
+    "6_defined_consumption_origin": false,
+    "7_distributor_integration_for_consumption": false,
+    "8_monitoringReading_has_uc_consumption": false,
+    "8_detail": "MonitoringReading possui energia de usina/inversor (energyTodayKwh/energyTotalKwh/powerKw) — não consumo de UC",
+    "9_risk_confuse_generation_with_consumption": true,
+    "9_mitigation": "Bounded context separado; API UC ≠ plant generation; teste obrigatório GERAÇÃO ≠ CONSUMO",
+    "10_partial_balance_concept": "apenas documentação (balanço mensal futuro); nenhum model/API de balanço"
+  },
+  "existing": {
+    "EnergyManagementService": "geração por Plant via MonitoringHistoryService",
+    "ConsumerUnit": "cadastro formal D3/4.1",
+    "Plant.consumerUnitId": "vínculo formal opcional Plant→UC",
+    "Distributor": "cadastro; sem integração de fatura/consumo"
+  },
+  "migrationDecision": {
+    "create": false,
+    "rationale": "Não há fonte real de consumo (distribuidora/medidor/importação). Persistência sem origem criaria registros vazios ou tentação de inventar dados. Consultas retornam hasData=false até existir fonte. Entidade EnergyConsumptionRecord fica documentada para Sprint com ingestão real.",
+    "proposedFutureModel": {
+      "name": "EnergyConsumptionRecord",
+      "fields": ["consumerUnitId", "periodFrom", "periodTo", "energyKwh", "origin", "qualityStatus", "receivedAt", "normalizedAt", "externalRef?"],
+      "whyNotDerived": "Geração de MonitoringReading ≠ consumo da UC; não existe fórmula aprovada"
+    }
+  },
+  "createThisSprint": [
+    "EnergyConsumptionService (consulta UC; ausência explícita)",
+    "GET /api/energy/consumer-units/:id/consumption",
+    "GET /api/energy/consumer-units/:id/consumption/summary",
+    "GET /api/energy/plants/:plantId/consumer-units/consumption",
+    "GET /api/energy/consumer-units/:id/balance-foundation (stubs pendentes)",
+    "assertConsumerUnitAccess via AuthorizationService",
+    "Frontend /gestao-energia — Geração vs Consumo UCs"
+  ],
+  "explicitlyDeferred": [
+    "EnergyConsumptionRecord migration",
+    "Rateio / Allocation",
+    "Credit / Compensation",
+    "MonthlyBalance definitivo",
+    "Faturamento / Cobrança",
+    "Integração distribuidora"
+  ]
+}

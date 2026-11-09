@@ -1,0 +1,13 @@
+{
+  "sprint": 9,
+  "title": "Consumo Energético e Base do Balanço — baseline",
+  "generatedAt": "2026-09-26T15:48:14.551Z",
+  "api": { "port": 3001, "health": "ok", "database": "ok", "redis": "ok" },
+  "web": { "port": 3000, "note": "login endpoint unreachable during baseline; build/lint/test passed" },
+  "tests": { "api": { "suites": 64, "passed": 451 }, "web": { "passed": 38, "failed": 0 } },
+  "lint": { "api": "PASS", "web": "PASS" },
+  "build": { "api": "PASS", "web": "PASS" },
+  "prismaValidate": "PASS",
+  "migrations": { "count": 12, "pending": 0, "upToDate": true },
+  "docker": { "postgres": "ok", "redis": "ok" }
+}

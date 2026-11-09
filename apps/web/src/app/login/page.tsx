@@ -12,8 +12,8 @@ function LoginForm() {
   const { login } = useAuth();
   const searchParams = useSearchParams();
   const expired = searchParams.get('motivo') === 'sessao';
-  const [email, setEmail] = useState('Diego');
-  const [password, setPassword] = useState('pdb100623');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState(expired ? 'Sua sessão expirou. Entre novamente.' : '');
   const [submitting, setSubmitting] = useState(false);
 
@@ -49,7 +49,7 @@ function LoginForm() {
           <h2>Acessar a plataforma</h2>
           <p>Entre com suas credenciais para continuar.</p>
           {error ? <div className="login-error" role="alert">{error}</div> : null}
-          <TextField id="email" label="Usuário" type="text" value={email} onChange={setEmail} placeholder="Diego" />
+          <TextField id="email" label="Usuário" type="text" value={email} onChange={setEmail} placeholder="Usuário ou e-mail" />
           <TextField id="senha" label="Senha" type="password" value={password} onChange={setPassword} placeholder="Digite sua senha" />
           <Button type="submit" disabled={submitting}>{submitting ? 'Entrando...' : 'Entrar'}</Button>
         </form>

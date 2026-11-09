@@ -2,6 +2,8 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { PrismaService } from '../../database/prisma.service';
 import { assertUtilityNumber, normalizeUtilityNumber, optionalContractAccount } from '../common/utility-number';
 import { CreateConsumerUnitDto, StatusDto, UpdateConsumerUnitDto } from '../common/dto';
+import { AccessScope, JwtPayload } from '../auth/auth.types';
+import { AuthorizationService } from '../auth/authorization.service';
 
 const include = {
   consumer: true,
@@ -10,14 +12,23 @@ const include = {
 
 @Injectable()
 export class ConsumerUnitsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private authorization: AuthorizationService,
+  ) {}
 
-  findAll(filters?: {
-    number?: string;
-    distributorId?: string;
-    consumerId?: string;
-    status?: string;
-  }) {
+  async findAll(
+    filters: {
+      number?: string;
+      distributorId?: string;
+      consumerId?: string;
+      status?: string;
+    } | undefined,
+    user: JwtPayload,
+  ) {
+    const scope = await this.authorization.resolveAccessScope(user);
+    // Escopo pelo Customer do titular (mesma regra de canAccessCustomer); vínculo Plant.consumerUnitId não concede acesso à listagem.
+    if (!scope.unrestricted && scope.customerIds.length === 0) return [];
     const number = normalizeUtilityNumber(filters?.number) || filters?.number?.trim();
     return this.prisma.consumerUnit.findMany({
       where: {
@@ -25,16 +36,40 @@ export class ConsumerUnitsService {
         ...(filters?.distributorId ? { distributorId: filters.distributorId } : {}),
         ...(filters?.consumerId ? { consumerId: filters.consumerId } : {}),
         ...(filters?.status ? { status: filters.status as never } : {}),
+        ...(scope.unrestricted ? {} : { consumer: { customer: { id: { in: scope.customerIds } } } }),
       },
       include,
       orderBy: { createdAt: 'desc' },
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, user: JwtPayload) {
+    const scope = await this.authorization.resolveAccessScope(user);
+    return this.findOneInScope(id, scope);
+  }
+
+  private async findOneInScope(id: string, scope: AccessScope) {
     const item = await this.prisma.consumerUnit.findUnique({ where: { id }, include });
-    if (!item) throw new NotFoundException('Unidade consumidora não encontrada.');
+    // Fora do escopo responde como inexistente para não revelar a UC.
+    if (!item || !(await this.canAccessConsumer(scope, item.consumerId))) {
+      throw new NotFoundException('Unidade consumidora não encontrada.');
+    }
     return item;
+  }
+
+  private async canAccessConsumer(scope: AccessScope, consumerId: string) {
+    if (scope.unrestricted) return true;
+    const customer = await this.prisma.customer.findUnique({ where: { consumerId }, select: { id: true } });
+    return customer ? this.authorization.canAccessCustomer(scope, customer.id) : false;
+  }
+
+  async createForUser(dto: CreateConsumerUnitDto, user: JwtPayload) {
+    const scope = await this.authorization.resolveAccessScope(user);
+    // Titular inexistente e titular fora do escopo respondem igual para não revelar o Consumer.
+    if (!(await this.canAccessConsumer(scope, dto.consumerId))) {
+      throw new NotFoundException('Consumidor não encontrado.');
+    }
+    return this.create(dto);
   }
 
   async create(dto: CreateConsumerUnitDto) {
@@ -56,8 +91,9 @@ export class ConsumerUnitsService {
     });
   }
 
-  async update(id: string, dto: UpdateConsumerUnitDto) {
-    const current = await this.findOne(id);
+  async update(id: string, dto: UpdateConsumerUnitDto, user: JwtPayload) {
+    const scope = await this.authorization.resolveAccessScope(user);
+    const current = await this.findOneInScope(id, scope);
     const consumerId = dto.consumerId ?? current.consumerId;
     const distributorId = dto.distributorId ?? current.distributorId;
     const number = dto.number !== undefined
@@ -67,7 +103,12 @@ export class ConsumerUnitsService {
       ? optionalContractAccount(dto.contractAccount)
       : undefined;
 
-    if (dto.consumerId) await this.assertConsumer(dto.consumerId);
+    if (dto.consumerId) {
+      await this.assertConsumer(dto.consumerId);
+      if (!(await this.canAccessConsumer(scope, dto.consumerId))) {
+        throw new NotFoundException('Consumidor não encontrado.');
+      }
+    }
     if (dto.distributorId) await this.assertDistributor(dto.distributorId);
     if (dto.number || dto.distributorId) {
       await this.assertUniqueNumber(distributorId, number, id);
@@ -86,8 +127,9 @@ export class ConsumerUnitsService {
     });
   }
 
-  async updateStatus(id: string, dto: StatusDto) {
-    await this.findOne(id);
+  async updateStatus(id: string, dto: StatusDto, user: JwtPayload) {
+    const scope = await this.authorization.resolveAccessScope(user);
+    await this.findOneInScope(id, scope);
     return this.prisma.consumerUnit.update({
       where: { id },
       data: { status: dto.status },

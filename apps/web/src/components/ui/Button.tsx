@@ -5,9 +5,19 @@ type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
 };
 
-export function Button({ children, variant = 'primary', className = '', ...props }: Props) {
+export function Button({
+  children,
+  variant = 'primary',
+  className = '',
+  type = 'button',
+  ...props
+}: Props) {
   return (
-    <button className={`ui-button ui-button-${variant} ${className}`.trim()} {...props}>
+    <button
+      type={type}
+      className={`ui-button ui-button-${variant} ${className}`.trim()}
+      {...props}
+    >
       {children}
     </button>
   );

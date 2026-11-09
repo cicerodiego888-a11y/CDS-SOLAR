@@ -1,0 +1,31 @@
+{
+  "sprint": 11,
+  "title": "Motor de Alocação Energética (kWh) — auditoria",
+  "generatedAt": "2026-09-26T16:35:00.000Z",
+  "findings": {
+    "EnergyManagementService": "EXISTS — consome MonitoringHistoryService.plantHistory; hasData; generation em kWh",
+    "MonitoringHistoryService": "EXISTS — period/timezone America/Sao_Paulo; parseQuery today/yesterday/last7days/thisMonth/custom",
+    "aggregateEnergyHistory": "EXISTS — deltas de energyTotalKwh preferencialmente, senão energyTodayKwh; unit kWh; NÃO converte powerKw",
+    "MonitoringReading_fields": {
+      "energyTodayKwh": "Decimal? — energia (kWh)",
+      "energyTotalKwh": "Decimal? — energia acumulada (kWh)",
+      "energyMonthKwh": "Decimal? — persistido; agregação não usa como fonte preferencial",
+      "powerKw": "Decimal? — potência; NÃO usar como geração"
+    },
+    "EnergyRateioVersion": "EXISTS — validFrom/validTo semiaberto; versionNumber; ACTIVE/CANCELLED",
+    "EnergyRateioLine": "EXISTS — consumerUnitId, consumerId, percentage Decimal(7,4)",
+    "ConsumerUnit": "EXISTS — formal; Plant.consumerUnitId opcional ≠ rateio",
+    "Plant_consumerUnit_legacy": "String legado — NÃO usar",
+    "permissions": ["ENERGY_VIEW", "ENERGY_UPDATE"],
+    "energy_endpoints": ["summary", "generation", "consumption*", "rateios*", "balance-foundation"],
+    "frontend": "/gestao-energia + /gestao-energia/rateios",
+    "migrations": 13,
+    "kW_to_kWh_conversion": false
+  },
+  "persistenceDecision": {
+    "persistEnergyAllocationTable": false,
+    "rationale": "Alocação é determinística: geração (MonitoringHistory) × % (EnergyRateioVersion/Line). Reproduzível via rateio histórico. Sem fechamento mensal/congelamento neste Sprint. Preferir read-model calculado.",
+    "migration": false
+  },
+  "multiVersionStrategy": "Segmentar [from,to) pelos intervalos ACTIVE de EnergyRateioVersion; para cada segmento chamar agregação de geração com period=custom; alocar por linha; concatenar segmentos na resposta."
+}

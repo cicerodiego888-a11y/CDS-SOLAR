@@ -9,7 +9,7 @@ Esta sprint faz hardening da aplicação existente. Não cria novo motor de aler
 Obrigatórios:
 
 - `DATABASE_URL` apontando para PostgreSQL;
-- `JWT_SECRET` forte em produção;
+- `JWT_SECRET` e `JWT_REFRESH_SECRET` fortes em produção (≥32 caracteres, sem defaults/exemplos); a API falha na inicialização se ausentes ou inseguros;
 - `CORS_ORIGINS` explícito, sem `*` quando credenciais estão habilitadas;
 - Redis disponível em `REDIS_HOST`, `REDIS_PORT` e `REDIS_PASSWORD` quando configurado.
 
@@ -46,7 +46,7 @@ O Compose existente mantém PostgreSQL e Redis com volumes e healthchecks. Não 
 ## Checklist
 
 - [ ] `DATABASE_URL` de produção configurada
-- [ ] `JWT_SECRET` forte e fora do código
+- [ ] `JWT_SECRET` e `JWT_REFRESH_SECRET` fortes e fora do código
 - [ ] `CORS_ORIGINS` explícito
 - [ ] PostgreSQL saudável
 - [ ] Redis saudável

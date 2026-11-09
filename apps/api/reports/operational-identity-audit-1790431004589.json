@@ -1,0 +1,55 @@
+{
+  "generatedAt": "2026-09-26T13:56:44.589Z",
+  "totals": {
+    "inverters": 1,
+    "equipment": 2,
+    "bindings": 0,
+    "invertersWithoutManufacturer": 0,
+    "invertersWithoutSerial": 0,
+    "duplicateInverterSerials": 0,
+    "gatewaysWithoutSerial": 0,
+    "dataloggersWithoutSerial": 0,
+    "gatewaysWithoutInverterLink": 2,
+    "dataloggersWithoutInverterLink": 0,
+    "bindingsWithoutExternalId": 0,
+    "bindingsWithInvalidExternalId": 0,
+    "bindingsExternalMetaWithoutProvider": 0,
+    "bindingsWithOrphanInverter": 0,
+    "duplicateExternalIdsSameProvider": 0,
+    "auxsolInvertersWithoutBinding": 1,
+    "auxsolGateways": 2,
+    "auxsolGatewaysWithoutInverterLink": 2
+  },
+  "items": [
+    {
+      "category": "AUXSOL_INVERTER_WITHOUT_BINDING",
+      "entityType": "Inverter",
+      "entityId": "cmubemnew0003tyi0yxakdzqj",
+      "detail": "serial=ASN-10SL2508230101 · plant=José Bezerra Sobrinho"
+    },
+    {
+      "category": "GATEWAY_WITHOUT_INVERTER_LINK",
+      "entityType": "Equipment",
+      "entityId": "cmubetf0j0005tyi0q3sk5bsi",
+      "detail": "serial=A012509010791620 · plant=José Bezerra Sobrinho"
+    },
+    {
+      "category": "AUXSOL_GATEWAY_WITHOUT_BINDING_CONTEXT",
+      "entityType": "Equipment",
+      "entityId": "cmubetf0j0005tyi0q3sk5bsi",
+      "detail": "serial=A012509010791620 · inverterId=não vinculado"
+    },
+    {
+      "category": "GATEWAY_WITHOUT_INVERTER_LINK",
+      "entityType": "Equipment",
+      "entityId": "cmucp320h0009tymcl89r0wm0",
+      "detail": "serial=A012510191909021 · plant=Ulisses Lima"
+    },
+    {
+      "category": "AUXSOL_GATEWAY_WITHOUT_BINDING_CONTEXT",
+      "entityType": "Equipment",
+      "entityId": "cmucp320h0009tymcl89r0wm0",
+      "detail": "serial=A012510191909021 · inverterId=não vinculado"
+    }
+  ]
+}

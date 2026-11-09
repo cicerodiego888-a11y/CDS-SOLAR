@@ -1,0 +1,78 @@
+{
+  "sprint": 7,
+  "title": "VÍNCULO OFICIAL E CENTRAL OPERACIONAL",
+  "generatedAt": "2026-09-26T15:00:00.000Z",
+  "completedAt": "2026-09-26T15:30:00.000Z",
+  "baseline": {
+    "api": "ok :3001 /api/health database=ok redis=ok AUXSOL=live",
+    "web": "ok :3000",
+    "testPre": "PASS API 420 Web 36",
+    "testPost": "PASS API 434 Web 38",
+    "lint": "PASS",
+    "build": "PASS",
+    "prismaValidate": "PASS",
+    "migrations": { "count": 12, "pending": 0 },
+    "migrationCreated": false
+  },
+  "questionsPreImplementation": {
+    "1_create_api": false,
+    "2_get_api": false,
+    "3_update_api": false,
+    "4_delete_api": false,
+    "5_validate_before_bind": false,
+    "6_validate_queries_manufacturer": "partial_script_only",
+    "7_requires_official_identity": "partial_script_only",
+    "8_permission": "n/a",
+    "9_scope": false,
+    "10_inverter_detail": true,
+    "11_plant_central": true,
+    "12_diagnosis": true,
+    "13_error_handling": true,
+    "14_audit_history": false,
+    "15_duplicate_risk": "partial",
+    "16_wrong_inverter_risk": true,
+    "17_wrong_plant_risk": true,
+    "18_secretRef_leak": "low"
+  },
+  "questionsPostImplementation": {
+    "1_create_api": true,
+    "2_get_api": true,
+    "3_update_api": "via_create_revalidate",
+    "4_delete_api": true,
+    "5_validate_before_bind": true,
+    "6_validate_queries_manufacturer": true,
+    "7_requires_official_identity": true,
+    "8_permission": true,
+    "9_scope": true,
+    "10_inverter_detail": true,
+    "11_plant_central": true,
+    "12_diagnosis": true,
+    "13_error_handling": true,
+    "14_audit_history": false,
+    "15_duplicate_blocked": true,
+    "16_serial_mismatch_blocked": true,
+    "17_scope_blocked": true,
+    "18_secretRef_omitted": true
+  },
+  "endpoints": [
+    "GET /api/inverters/:inverterId/integration-binding",
+    "POST /api/inverters/:inverterId/integration-binding/validate",
+    "POST /api/inverters/:inverterId/integration-binding",
+    "DELETE /api/inverters/:inverterId/integration-binding"
+  ],
+  "jose": {
+    "serial": "ASN-10SL2508230101",
+    "binding": false,
+    "expectedValidate": "TARGET_NOT_FOUND",
+    "altered": false
+  },
+  "ulisses": {
+    "inverterInB7": false,
+    "altered": false
+  },
+  "auxsolAltered": false,
+  "circuitBreaker": "MISSING_FUTURO_HARDENING",
+  "cooldown": "MISSING_FUTURO_HARDENING",
+  "decision": "APROVADA_COM_PENDENCIAS",
+  "criterion": "B7 LOCAL = PREPARADO; FABRICANTE = BLOQUEIO EXTERNO"
+}

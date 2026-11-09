@@ -31,6 +31,8 @@ const routes = [
   'consumidores/[id]/page.tsx',
   'unidades-consumidoras/page.tsx',
   'unidades-consumidoras/[id]/page.tsx',
+  'gestao-energia/page.tsx',
+  'gestao-energia/rateios/page.tsx',
   'relatorios/page.tsx',
   'configuracoes/page.tsx',
 ];
@@ -57,7 +59,18 @@ describe('telas de cliente e usina', () => {
     assert.match(clienteDetalhe, /Conta contrato/);
     assert.match(clienteDetalhe, /\/customers\/\$\{params\.id\}\/consumer-units/);
     assert.match(clienteDetalhe, /Este consumidor ainda não possui unidade consumidora cadastrada/);
+    assert.match(clienteDetalhe, /Dados cadastrais/);
+    assert.match(clienteDetalhe, /Informações comerciais do Customer/);
     assert.doesNotMatch(clienteDetalhe, /name:\s*data\.name/);
+  });
+
+  it('lista de clientes usa busca local e estados claros', () => {
+    assert.match(clientesPage, /busca-cliente/);
+    assert.match(clientesPage, /LoadingState/);
+    assert.match(clientesPage, /ErrorMessage/);
+    assert.match(clientesPage, /EmptyState/);
+    assert.match(clientesPage, /Nenhum cliente encontrado/);
+    assert.match(clientesPage, /Novo cliente/);
   });
 
   it('a usina seleciona UC do cliente e deriva a distribuidora', () => {

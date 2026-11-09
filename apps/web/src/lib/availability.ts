@@ -12,6 +12,8 @@ export type OperationalHealth = 'HEALTHY' | 'ATTENTION' | 'CRITICAL' | 'NO_DATA'
 export function healthLabel(health?: string | null, reason?: string | null) {
   if (reason === 'INTEGRATION_BLOCKED') return 'Integração bloqueada';
   if (reason === 'INTEGRATION_NOT_CONFIGURED' || reason === 'NOT_SUPPORTED') return 'Não configurado';
+  if (reason === 'LIVE_OBSERVATION' && health === 'HEALTHY') return 'Observado ao vivo';
+  if (reason === 'LIVE_OBSERVATION' && health === 'ATTENTION') return 'Atenção (ao vivo)';
   if (health === 'HEALTHY') return 'Saudável';
   if (health === 'ATTENTION') return 'Atenção';
   if (health === 'CRITICAL') return 'Crítico';

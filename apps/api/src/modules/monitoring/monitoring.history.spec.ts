@@ -1,6 +1,10 @@
 import { NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { MonitoringAccessService } from './monitoring.access';
-import { MonitoringHistoryService } from './monitoring.history.service';
+import {
+  MonitoringHistoryService,
+  sumLatestEnergyField,
+  sumLatestPowerKw,
+} from './monitoring.history.service';
 
 describe('MonitoringHistoryService', () => {
   it('intervalo inválido retorna 422', () => {
@@ -29,6 +33,13 @@ describe('MonitoringHistoryService', () => {
     expect(result.hasData).toBe(false);
     expect(result.emptyMessage).toBe('Não existem leituras para o período.');
     expect(result.energyKwh).toBeNull();
+  });
+
+  it('sumLatestPowerKw e sumLatestEnergyField não inventam zero', () => {
+    expect(sumLatestPowerKw([])).toEqual({ valueKw: null, hasData: false });
+    expect(sumLatestEnergyField([], 'energyTodayKwh')).toEqual({ valueKwh: null, hasData: false });
+    expect(sumLatestEnergyField([{ energyMonthKwh: 12 }, { energyMonthKwh: null }], 'energyMonthKwh'))
+      .toEqual({ valueKwh: 12, hasData: true });
   });
 
   it('filtra usina e inversor na consulta', async () => {

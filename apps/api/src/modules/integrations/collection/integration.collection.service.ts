@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, Optional, ServiceUnavailableException } from '@nestjs/common';
 import { IntegrationBindingStatus } from '@prisma/client';
 import { PrismaService } from '../../../database/prisma.service';
-import { CollectionResult } from '../integration.contract';
+import { CollectionLiveReading, CollectionResult } from '../integration.contract';
 import { createDefaultIntegrationEngine, IntegrationEngine } from '../integration.engine';
 import {
   collectionFailed,
@@ -11,7 +11,9 @@ import {
   integrationNotSupported,
   persistenceFailed,
 } from './collection.errors';
+import { isReadingPersistAllowed } from './auxsol-persist-scope';
 import { InProcessCollectionLock } from './collection.lock';
+import { buildLiveReadingView } from './live-reading.view';
 import { MonitoringPersistenceService } from './monitoring.persistence.service';
 import { validateNormalizedReading } from './reading.validator';
 import { MonitoringAlertService } from '../../alerts/alert.engine';
@@ -93,29 +95,37 @@ export class IntegrationCollectionService {
       const valid = readings.filter(validateNormalizedReading);
       const skippedInvalid = readings.length - valid.length;
 
+      // Persistência efetiva: flag do adapter + allowlist AUXSOL (escopo Ulisses nesta sprint).
+      const persistThis = isReadingPersistAllowed({
+        provider: adapter.provider,
+        inverterId: inverter.id,
+        runtimePersistable: runtime.persistable,
+      });
+
       let persisted = 0;
-      if (runtime.persistable) {
+      if (persistThis) {
         const stored = await this.persistence.persist(inverter.plantId, inverter.id, adapter.provider, readings);
         persisted = stored.persisted;
       } else {
         persisted = 0;
       }
 
-      const lastSyncAt = runtime.persistable && (persisted > 0 || readings.length === 0)
-        ? new Date()
-        : undefined;
+      // lastSyncAt registra coleta bem-sucedida mesmo sem persistência (proxy de leitura recente).
+      const lastSyncAt = valid[0]?.collectedAt
+        ?? (persistThis && readings.length === 0 ? new Date() : undefined);
 
       await this.markBinding(binding.id, {
-        status: runtime.persistable ? IntegrationBindingStatus.CONNECTED : IntegrationBindingStatus.READY,
+        status: persistThis ? IntegrationBindingStatus.CONNECTED : IntegrationBindingStatus.READY,
         lastSyncAt,
-        lastErrorAt: runtime.persistable ? null : undefined,
+        lastErrorAt: persistThis ? null : undefined,
         lastErrorMessage: runtime.mode === 'mock'
           ? 'Coleta executada em modo de fixture interno. Dados não foram persistidos como monitoramento real.'
           : null,
         externalId: readings[0]?.externalInverterId ?? binding.externalId,
       });
 
-      if (this.alerts && runtime.persistable && valid[0]) {
+      // COERENCIA-03: evaluateAfterCollection somente quando a leitura foi efetivamente persistível neste inversor.
+      if (this.alerts && persistThis && valid[0]) {
         await this.alerts.evaluateAfterCollection({
           inverterId: inverter.id,
           inverterName: inverter.model,
@@ -124,6 +134,7 @@ export class IntegrationCollectionService {
           status: valid[0].status,
           collectedAt: valid[0].collectedAt,
           lastReadingAt: valid[0].collectedAt,
+          persistedLastReadingAt: valid[0].collectedAt,
           readingValid: true,
           collectability: 'COLLECTABLE',
           provider: adapter.provider,
@@ -137,6 +148,15 @@ export class IntegrationCollectionService {
         });
       }
 
+      const liveReading = buildLiveReadingView({
+        readings,
+        valid,
+        persisted: persisted > 0,
+        emptyReason: readings.length === 0
+          ? 'Coleta realizada sem dados de telemetria.'
+          : undefined,
+      });
+
       this.log({
         integration: adapter.provider.toLowerCase(),
         operation: 'collect',
@@ -144,6 +164,8 @@ export class IntegrationCollectionService {
         status: 'success',
         readings: readings.length,
         persisted,
+        persistScoped: persistThis,
+        liveAvailable: liveReading.available,
         durationMs: Date.now() - started,
       });
 
@@ -156,14 +178,17 @@ export class IntegrationCollectionService {
         readings: readings.length,
         valid: valid.length,
         persisted,
-        skipped: runtime.persistable ? skippedInvalid : readings.length,
+        skipped: persistThis ? skippedInvalid : readings.length,
         lastSyncAt: lastSyncAt?.toISOString() ?? binding.lastSyncAt?.toISOString() ?? null,
         started,
+        liveReading,
         message: runtime.mode === 'mock'
           ? 'Coleta de fixture concluída. Nenhum dado fictício foi gravado no monitoramento.'
           : readings.length === 0
             ? 'Coleta realizada sem dados.'
-            : 'Sincronização concluída.',
+            : persistThis
+              ? 'Sincronização concluída.'
+              : 'Leitura ao vivo obtida. Persistência desabilitada nesta configuração.',
       });
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
@@ -222,6 +247,7 @@ export class IntegrationCollectionService {
     started: number;
     code?: CollectionResult['code'];
     message: string;
+    liveReading?: CollectionLiveReading | null;
   }): CollectionResult {
     return {
       ok: input.ok,
@@ -237,6 +263,7 @@ export class IntegrationCollectionService {
       durationMs: Date.now() - input.started,
       code: input.code,
       message: input.message,
+      liveReading: input.liveReading ?? null,
     };
   }
 

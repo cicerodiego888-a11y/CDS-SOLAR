@@ -7,7 +7,9 @@ type Props = {
   options: Option[];
   placeholder?: string;
   error?: string;
+  hint?: string;
   disabled?: boolean;
+  name?: string;
   onChange?: (value: string) => void;
 };
 
@@ -18,17 +20,26 @@ export function SelectField({
   options,
   placeholder = 'Selecione',
   error,
+  hint,
   disabled,
+  name,
   onChange,
 }: Props) {
+  const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
+  const empty = !value;
+
   return (
     <label className={`ui-field${error ? ' is-error' : ''}`} htmlFor={id}>
-      <span>{label}</span>
+      <span className="ui-field-label">{label}</span>
       <select
         id={id}
+        name={name ?? id}
         value={value}
         disabled={disabled}
-        aria-invalid={Boolean(error)}
+        aria-invalid={Boolean(error) || undefined}
+        aria-describedby={describedBy}
+        className={empty ? 'is-placeholder' : undefined}
+        data-placeholder={empty ? 'true' : undefined}
         onChange={(event) => onChange?.(event.target.value)}
       >
         <option value="">{placeholder}</option>
@@ -38,7 +49,8 @@ export function SelectField({
           </option>
         ))}
       </select>
-      {error ? <span className="ui-field-error">{error}</span> : null}
+      {hint && !error ? <span className="ui-field-hint" id={`${id}-hint`}>{hint}</span> : null}
+      {error ? <span className="ui-field-error" id={`${id}-error`}>{error}</span> : null}
     </label>
   );
 }

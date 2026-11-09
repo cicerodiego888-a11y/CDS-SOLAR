@@ -133,6 +133,7 @@ model Plant {
   readings        MonitoringReading[]
   alerts          Alert[]
   memberships     UserMembership[]
+  rateioVersions  EnergyRateioVersion[]
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
@@ -362,6 +363,7 @@ model Consumer {
   phone         String?
   status        RecordStatus   @default(ACTIVE)
   consumerUnits ConsumerUnit[]
+  rateioLines   EnergyRateioLine[]
   customer      Customer?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
@@ -370,7 +372,7 @@ model Consumer {
   @@index([name])
 }
 
-/// Unidade Consumidora (UC). Independente de Plant; Rateio virá em sprint futura.
+/// Unidade Consumidora (UC). Independente de Plant; Rateio versionado mediado por EnergyRateio*.
 model ConsumerUnit {
   id              String       @id @default(cuid())
   consumerId      String
@@ -384,6 +386,7 @@ model ConsumerUnit {
   address         String?
   status          RecordStatus @default(ACTIVE)
   plants          Plant[]
+  rateioLines     EnergyRateioLine[]
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
@@ -391,4 +394,55 @@ model ConsumerUnit {
   @@index([consumerId])
   @@index([distributorId])
   @@index([status])
+}
+
+/// Status persistido da versão de Rateio. EXPIRED é derivado da vigência na leitura.
+enum EnergyRateioVersionStatus {
+  ACTIVE
+  CANCELLED
+}
+
+/// Versão de composição de Rateio de uma Plant (UI: Rateio). Σ percentage das linhas = 100%.
+/// Rateio representa regra de distribuição — não energia compensada, crédito ou saldo.
+model EnergyRateioVersion {
+  id            String                    @id @default(cuid())
+  plantId       String
+  plant         Plant                     @relation(fields: [plantId], references: [id], onDelete: Restrict)
+  versionNumber Int
+  validFrom     DateTime
+  /// Fim exclusivo [validFrom, validTo). NULL = vigência aberta.
+  validTo       DateTime?
+  status        EnergyRateioVersionStatus @default(ACTIVE)
+  /// Modalidade SCEE/regulatória — nullable até enumeração oficial.
+  modality      String?
+  reason        String?
+  createdBy     String?
+  lines         EnergyRateioLine[]
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+
+  @@unique([plantId, versionNumber])
+  @@index([plantId, status])
+  @@index([plantId, validFrom])
+  @@index([validFrom, validTo])
+}
+
+/// Linha de Rateio: UC + Consumidor + percentual dentro de uma versão.
+model EnergyRateioLine {
+  id               String             @id @default(cuid())
+  rateioVersionId  String
+  rateioVersion    EnergyRateioVersion @relation(fields: [rateioVersionId], references: [id], onDelete: Cascade)
+  consumerUnitId   String
+  consumerUnit     ConsumerUnit       @relation(fields: [consumerUnitId], references: [id], onDelete: Restrict)
+  /// Deve coincidir com ConsumerUnit.consumerId (validado no serviço).
+  consumerId       String
+  consumer         Consumer           @relation(fields: [consumerId], references: [id], onDelete: Restrict)
+  /// Percentual 0 < p ≤ 100. Decimal(7,4) — não float binário.
+  percentage       Decimal            @db.Decimal(7, 4)
+  createdAt        DateTime           @default(now())
+
+  @@unique([rateioVersionId, consumerUnitId])
+  @@index([consumerUnitId])
+  @@index([consumerId])
+  @@index([rateioVersionId])
 }

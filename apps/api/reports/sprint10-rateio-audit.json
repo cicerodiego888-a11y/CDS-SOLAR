@@ -1,0 +1,36 @@
+{
+  "sprint": 10,
+  "title": "Motor de Rateio Versionado — auditoria pré-código",
+  "generatedAt": "2026-09-26T16:05:00.000Z",
+  "questions": {
+    "1_rateio_exists": false,
+    "2_plant_consumerUnit_reusable_relation": "Plant.consumerUnitId formal opcional (1 UC); NÃO substitui Rateio N:N",
+    "3_legacy_must_not_use": ["Plant.consumerUnit", "Plant.distributor (string)"],
+    "4_consumer_consumerUnit": "Consumer 1:N ConsumerUnit via consumerId",
+    "5_identify_plant": "Plant.id",
+    "6_identify_uc": "ConsumerUnit.id",
+    "7_identify_consumer": "Consumer.id via ConsumerUnit.consumerId",
+    "8_plant_authorization": true,
+    "9_consumerUnit_authorization": true,
+    "10_duplication_risk": "evitar FK Plant.consumerUnitId como rateio; evitar % em Plant",
+    "11_rateio_calculation_exists": false,
+    "12_reusable_vigencia": false,
+    "13_migration_needed": true
+  },
+  "domainSource": "docs/architecture/domain-energy-rateio-4.2.md",
+  "chosenModel": {
+    "name": "EnergyRateioVersion + EnergyRateioLine",
+    "rationale": "Sprint 10 exige versão de composição da Plant (V1/V2) com Σ%=100 e histórico imutável. Modelo plant-level version + lines atende UI/API; mediadores Plant/UC/Consumer explícitos; sem kWh."
+  },
+  "migrationProposed": {
+    "name": "20260926170000_energy_rateio_versioned",
+    "tables": ["EnergyRateioVersion", "EnergyRateioLine"],
+    "destructive": false,
+    "autoMigrateLegacy": false,
+    "joseUlissesTouched": false
+  },
+  "lumi": {
+    "used": true,
+    "usage": "functional_reference_only"
+  }
+}

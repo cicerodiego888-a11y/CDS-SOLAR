@@ -7,19 +7,12 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { PermissionsGuard } from './permissions.guard';
 import { AuthorizationService, MembershipsService } from './authorization.service';
 import { MembershipsController } from './memberships.controller';
-
-function jwtSecret() {
-  const secret = process.env.JWT_SECRET?.trim();
-  if (process.env.NODE_ENV === 'production' && (!secret || secret === 'dev-secret')) {
-    throw new Error('JWT_SECRET forte é obrigatório em produção.');
-  }
-  return secret || 'dev-secret';
-}
+import { resolveJwtSigningSecret } from './jwt-secrets';
 
 @Module({
   imports: [
     JwtModule.register({
-      secret: jwtSecret(),
+      secret: resolveJwtSigningSecret(),
       signOptions: { expiresIn: '8h' },
     }),
   ],
